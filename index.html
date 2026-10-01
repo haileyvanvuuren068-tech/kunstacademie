@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full bg-slate-50 text-slate-800">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>KunstAcademie Educatieve Tekengame</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Inter & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .canvas-crosshair {
+      cursor: crosshair;
+      touch-action: none !important;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .canvas-paper {
+      background-color: #ffffff;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.03);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-full flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="showDashboard()">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-sm">
+        <i class="fa-solid fa-palette text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-serif font-bold text-lg text-slate-900 leading-none">RijksKunst Academie</h1>
+        <p class="text-xs text-slate-500 font-medium mt-0.5">Educatieve Kunstgids & Tekenstudio</p>
+      </div>
+    </div>
+
+    <!-- Right Header Controls -->
+    <div class="flex items-center space-x-4">
+      <button onclick="showDashboard()" id="navHomeBtn" class="hidden px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5">
+        <i class="fa-solid fa-grip"></i>
+        <span>Alle 6 Vakken</span>
+      </button>
+
+      <!-- XP Stats Badge -->
+      <div class="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full text-xs font-bold text-amber-800">
+        <i class="fa-solid fa-star text-amber-500"></i>
+        <span id="totalXpDisplay">0 XP</span>
+      </div>
+
+      <!-- Reset Progress -->
+      <button onclick="confirmReset()" class="text-slate-400 hover:text-rose-600 text-xs p-1.5 transition-colors" title="Reset Voortgang">
+        <i class="fa-solid fa-rotate-left text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- DASHBOARD VIEW (3x2 GRID OF SUBJECTS) -->
+  <main id="dashboardView" class="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8">
+    <div class="mb-8 text-center max-w-2xl mx-auto">
+      <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">Interactief Leerplan</span>
+      <h2 class="font-serif font-bold text-3xl text-slate-900 mt-2 mb-2">Kies een Kunstvak</h2>
+      <p class="text-sm text-slate-600">
+        Elk vak bevat <strong>3 unieke niveaus</strong>. Elk niveau doorloopt 3 stappen: 
+        <strong>Kennis & Voorbeelden</strong>, <strong>Tekenopdracht</strong> en een <strong>Kennischeck Quiz (min. 4/5 goed)</strong>.
+      </p>
+    </div>
+
+    <!-- 3x2 Grid of Subjects -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="subjectGrid">
+      <!-- Injected dynamically via JS -->
+    </div>
+  </main>
+
+  <!-- LESSON WORKSPACE VIEW -->
+  <main id="workspaceView" class="flex-1 flex flex-col hidden overflow-hidden bg-slate-50">
+    
+    <!-- SUB-HEADER: Subject Title & Level Selector -->
+    <div class="bg-white border-b border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div class="flex items-center space-x-3">
+        <div id="subjectIconBadge" class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-base font-bold">
+          <i class="fa-solid fa-pencil"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-slate-900 text-base leading-tight" id="activeSubjectTitle">Vaknaam</h2>
+          <p class="text-xs text-slate-500" id="activeLevelTitle">Niveau 1</p>
+        </div>
+      </div>
+
+      <!-- LEVEL SELECTION BUTTONS (1, 2, 3) -->
+      <div class="flex items-center space-x-2" id="levelSelectorContainer">
+        <!-- Level pills injected via JS -->
+      </div>
+    </div>
+
+    <!-- STEP TABS (1. Voorkennis, 2. Tekenopdracht, 3. Quiz) -->
+    <div class="bg-slate-100 border-b border-slate-200 px-6 py-2 flex items-center space-x-2 shrink-0">
+      <button onclick="switchStep(1)" id="stepTab1" class="px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all bg-white text-indigo-600 shadow-xs border border-slate-200">
+        <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px]">1</span>
+        <span>📖 1. Kennis & Voorkennis</span>
+      </button>
+
+      <div class="text-slate-300 text-xs"><i class="fa-solid fa-chevron-right"></i></div>
+
+      <button onclick="switchStep(2)" id="stepTab2" class="px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/50">
+        <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">2</span>
+        <span>🎨 2. Tekenopdracht</span>
+      </button>
+
+      <div class="text-slate-300 text-xs"><i class="fa-solid fa-chevron-right"></i></div>
+
+      <button onclick="switchStep(3)" id="stepTab3" class="px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/50">
+        <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">3</span>
+        <span>❓ 3. Quiz Check</span>
+      </button>
+    </div>
+
+    <!-- WORKSPACE CONTENT AREA -->
+    <div class="flex-1 overflow-y-auto p-6">
+      
+      <!-- STEP 1: KENNIS & VOORKENNIS -->
+      <div id="stepContent1" class="max-w-4xl mx-auto space-y-6">
+        <div class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-xs space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Theorie & Beeldanalyse</span>
+            <h3 class="font-serif font-bold text-2xl text-slate-900 mt-1" id="theoryTitle">Theorie Titel</h3>
+          </div>
+
+          <!-- Main Theory Text -->
+          <div class="prose prose-slate text-sm leading-relaxed space-y-4 text-slate-700" id="theoryText">
+            <!-- Theory Content injected via JS -->
+          </div>
+
+          <!-- Featured Artwork Visual & Analysis -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wide text-amber-700">
+              <i class="fa-solid fa-image text-amber-500"></i>
+              <span>Passend Kunstwerk & Beeldanalyse</span>
+            </div>
+            <div id="artworkContainer" class="flex flex-col md:flex-row gap-5 items-center">
+              <!-- Dynamic artwork image & analysis -->
+            </div>
+          </div>
+
+          <!-- EXTRA THEORY SECTION (Appears when Quiz was failed) -->
+          <div id="extraTheoryBox" class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-5 space-y-3">
+            <div class="flex items-center space-x-2 text-amber-900 font-bold text-sm">
+              <i class="fa-solid fa-lightbulb text-amber-600 text-lg"></i>
+              <span>Extra Uitleg & Verdieping (Herhaling)</span>
+            </div>
+            <p class="text-xs text-amber-950 leading-relaxed" id="extraTheoryText">
+              Lees onderstaande extra studietips zorgvuldig door om de quiz bij je volgende poging wél te halen!
+            </p>
+          </div>
+
+          <!-- Proceed to Drawing Button -->
+          <div class="pt-4 border-t border-slate-100 flex justify-end">
+            <button onclick="switchStep(2)" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md shadow-indigo-100 transition-colors flex items-center space-x-2">
+              <span>Naar de Tekenopdracht</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: TEKENOPDRACHT & CANVAS -->
+      <div id="stepContent2" class="max-w-5xl mx-auto hidden space-y-4">
+        
+        <!-- Task Description Bar -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs">
+          <div>
+            <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Praktijkopdracht</span>
+            <h4 class="font-bold text-slate-900 text-sm" id="drawingTaskTitle">Opdrachtnaam</h4>
+            <p class="text-xs text-slate-600 mt-0.5" id="drawingTaskInstruction">Instructie voor het tekenen...</p>
+          </div>
+
+          <!-- Clear Canvas Button -->
+          <button onclick="clearCanvas()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition-colors shrink-0 flex items-center space-x-1">
+            <i class="fa-solid fa-eraser"></i>
+            <span>Doek Wissen</span>
+          </button>
+        </div>
+
+        <!-- CANVAS TOOLBAR & STUDIO -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
+          
+          <!-- Drawing Tools Row -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <!-- Tool Selector -->
+            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg">
+              <button onclick="setTool('pen')" id="tool-pen" class="px-3 py-1.5 rounded-md text-xs font-bold bg-white text-indigo-600 shadow-xs transition-all">
+                <i class="fa-solid fa-pen-nib mr-1"></i> Pen
+              </button>
+              <button onclick="setTool('brush')" id="tool-brush" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                <i class="fa-solid fa-paintbrush mr-1"></i> Kwast
+              </button>
+              <button onclick="setTool('eraser')" id="tool-eraser" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">
+                <i class="fa-solid fa-eraser mr-1"></i> Gom
+              </button>
+            </div>
+
+            <!-- Colors & Brush Size -->
+            <div class="flex items-center space-x-4">
+              <!-- Color Picker -->
+              <div class="flex items-center space-x-1.5">
+                <input type="color" id="colorPicker" value="#1e293b" class="w-7 h-7 rounded cursor-pointer border border-slate-300">
+                <div class="flex space-x-1">
+                  <button onclick="setColor('#1e293b')" class="w-5 h-5 rounded-full bg-slate-800 border border-slate-300"></button>
+                  <button onclick="setColor('#ef4444')" class="w-5 h-5 rounded-full bg-red-500 border border-slate-300"></button>
+                  <button onclick="setColor('#3b82f6')" class="w-5 h-5 rounded-full bg-blue-500 border border-slate-300"></button>
+                  <button onclick="setColor('#10b981')" class="w-5 h-5 rounded-full bg-emerald-500 border border-slate-300"></button>
+                  <button onclick="setColor('#f59e0b')" class="w-5 h-5 rounded-full bg-amber-500 border border-slate-300"></button>
+                </div>
+              </div>
+
+              <div class="h-4 w-px bg-slate-200"></div>
+
+              <!-- Size Slider -->
+              <div class="flex items-center space-x-2">
+                <span class="text-[10px] text-slate-400 font-bold">Dikte:</span>
+                <input type="range" id="brushSize" min="1" max="30" value="3" class="w-20 accent-indigo-600">
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Drawing Canvas (Touch Scroll Prevented) -->
+          <div class="relative w-full h-[400px] bg-white rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center canvas-paper select-none">
+            <canvas id="drawingCanvas" class="canvas-crosshair w-full h-full block"></canvas>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="flex items-center justify-between pt-2">
+            <p class="text-xs text-slate-400 italic" id="drawingStatusText">
+              Teken op het doek. Zodra je klaar bent, klik op "Inleveren & Naar Quiz".
+            </p>
+            <button onclick="verifyAndSubmitDrawing()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-100 transition-colors flex items-center space-x-2">
+              <i class="fa-solid fa-check"></i>
+              <span>Tekening Inleveren & Naar Quiz</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: QUIZ CHECK -->
+      <div id="stepContent3" class="max-w-3xl mx-auto hidden space-y-6">
+        <div class="bg-white rounded-2xl p-6 md:p-8 border border-slate-200 shadow-xs space-y-6">
+          <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Stap 3: Kennischeck</span>
+              <h3 class="font-serif font-bold text-2xl text-slate-900 mt-1">Niveau Quiz (5 Vragen)</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Beantwoord minimaal 4 van de 5 vragen goed om dit niveau te behalen!</p>
+            </div>
+            <span id="quizAttemptBadge" class="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full border border-slate-200">
+              Poging 1
+            </span>
+          </div>
+
+          <!-- Quiz Questions Form -->
+          <form id="quizForm" class="space-y-6">
+            <!-- 5 Questions injected via JS -->
+          </form>
+
+          <!-- Submit Quiz Button -->
+          <div class="pt-4 border-t border-slate-100 flex justify-end">
+            <button onclick="evaluateQuiz(event)" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-indigo-200 transition-all flex items-center space-x-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Quiz Nakijken & Cijfer Berekenen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- RESULT MODAL -->
+  <div id="resultModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center relative">
+      
+      <div id="resultModalIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto text-3xl mb-3">
+        <!-- Icon injected via JS -->
+      </div>
+
+      <h3 id="resultModalTitle" class="font-serif font-bold text-2xl text-slate-900 mb-1">Uitslag</h3>
+      <p id="resultModalSubtitle" class="text-xs text-slate-500 mb-4">Quiz resultaat</p>
+
+      <div id="resultScoreBox" class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center mb-5">
+        <span class="text-3xl font-black text-slate-900" id="quizScoreDisplay">0 / 5</span>
+        <p class="text-xs text-slate-500 mt-1" id="quizFeedbackMessage">Goede antwoorden</p>
+      </div>
+
+      <div id="resultModalActions" class="flex gap-3">
+        <!-- Buttons injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. LESSON DATA: 6 SUBJECTS WITH 3 LEVELS EACH (ACCURATE ARTWORKS & DUAL POOLS)
+       ========================================================================== */
+    const SUBJECTS = [
+      {
+        id: 'lijn',
+        title: 'Lijn & Handschrift',
+        icon: 'fa-pencil',
+        color: 'indigo',
+        description: 'Lijnsoorten, omtreklijnen, arcering en persoonlijke tekenstijl.',
+        levels: [
+          {
+            id: 1,
+            title: 'Lijnsoorten & Contour',
+            theoryTitle: 'Het Geheim van de Lijn',
+            theoryText: `
+              <p>In de beeldende kunst is een <strong>lijn</strong> de meest fundamentele bouwsteen. Een lijn ontstaat door een bewegend punt op papier. We onderscheiden verschillende soorten lijnen:</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Omtreklijn (Contourlijn):</strong> Een lijn die de buitenste begrenzing van een vorm aangeeft.</li>
+                <li><strong>Arcering:</strong> Veel evenwijdige lijnen dicht bij elkaar om schaduw en diepte te suggereer.</li>
+                <li><strong>Lijnvoering/Handschrift:</strong> Het unieke karakter van de streek van de kunstenaar (bijv. krachtig, zacht, hoekig of zoekend).</li>
+              </ul>
+            `,
+            artworkTitle: 'De Sterrennacht (1889)',
+            artist: 'Vincent van Gogh',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/600px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg',
+            artworkAnalysis: 'In dit beroemde werk van Van Gogh zie je zijn unieke **grafische handschrift**. Hij gebruikt dikke, golvende en ritmische contourlijnen om energie en beweging in de nachtlucht te leggen.',
+            extraTheory: 'Onthoud goed: Een contourlijn geeft de buitenste vorm aan. Arceringen (kruisarcering) zorgen voor schaduw. Van Gogh stond bekend om zijn golvende, dynamische lijnvoering.',
+            drawingTaskTitle: 'Contour & Handschrift',
+            drawingTaskInstruction: 'Teken een object (bijv. een vaas of fruit) met duidelijke omtreklijnen én voeg arceringen toe voor schaduw.',
+            quizA: [
+              { q: 'Wat is de juiste definitie van een omtreklijn (contourlijn)?', opts: ['Een lijn die het midden van een vorm verdeelt', 'Een lijn die de buitenste begrenzing van een vorm aangeeft', 'Een serie stippen die een patroon vormen', 'Een lijn die alleen voor schaduw zorgt'], correct: 1 },
+              { q: 'Hoe noem je een reeks evenwijdige lijnen die samen schaduw vormen?', opts: ['Contour', 'Egalisatie', 'Arcering', 'Symmetrie'], correct: 2 },
+              { q: 'Wat typeert het lijngebruik van Vincent van Gogh in zijn kunstwerken?', opts: ['Strakke, onzichtbare liniaallijnen', 'Golvende, dynamische en expressieve lijnen', 'Alleen maar dunne stippellijnen', 'Vaste geometrische rasters'], correct: 1 },
+              { q: 'Wat verstaan we in de kunst onder "handschrift"?', opts: ['Het geschreven bijschrift bij een schilderij', 'De unieke, persoonlijke stijl van streekvoering', 'De handtekening van de museumdirecteur', 'Het alfabet dat in het werk is geschilderd'], correct: 1 },
+              { q: 'Welk effect bereik je door lijnen dichter op elkaar te arceren?', opts: ['De vorm lijkt lichter', 'Er ontstaat een donkerdere schaduwzone', 'De lijn verdwijnt volledig', 'De kleur verandert van rood naar blauw'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Waarvoor gebruikt een kunstenaar voornamelijk kruisarcering?', opts: ['Om rechte hoeken te meten', 'Om diepte en donkere schaduwgradaties op te bouwen', 'Om de lijst van de tekening te versieren', 'Om de achtergrond wit te maken'], correct: 1 },
+              { q: 'Wat is de functie van een omtreklijn bij een schets?', opts: ['Het aangeven van de scheidingslijn tussen de vorm en de rustruimte', 'Het invulling geven aan kleur', 'Het glimmend maken van het papier', 'Het weghalen van fouten'], correct: 0 },
+              { q: 'Welke stelling over lijnvoering is JUIST?', opts: ['Lijnvoering is bij elke kunstenaar exact hetzelfde', 'Lijnvoering laat de emotie en spanning van de maker zien', 'Lijnen kunnen nooit dikteverschil hebben', 'Lijnen zijn alleen zichtbaar in beeldhouwwerken'], correct: 1 },
+              { q: 'Welk gevoel roepen scherpe, hoekige lijnen meestal op?', opts: ['Rust en sereniteit', 'Spanning, energie of agressie', 'Volledige vrolijkheid', 'Geen enkel gevoel'], correct: 1 },
+              { q: 'Wat zie je in Van Gogh\'s werk "De Sterrennacht"?', opts: ['Strakke onbeweeglijke vlakken', 'Ritme en dynamiek door golvende lijnstreken', 'Fotorealistische gladde details', 'Enkel rechte verticale lijnen'], correct: 1 }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Arcering & Textuur',
+            theoryTitle: 'Diepte Bouwen met Lijnen',
+            theoryText: `
+              <p>Met enkel lijnen kun je een plat vlak veranderen in een tastbaar voorwerp met stofuitdrukking en textuur.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Enkele arcering:</strong> Lijnen in één richting. Hoe dichter bij elkaar, hoe donkerder.</li>
+                <li><strong>Kruisarcering:</strong> Lagen lijnen die elkaar kruisen onder verschillende hoeken voor diepe schaduwen.</li>
+                <li><strong>Vormvolgende arcering:</strong> Lijnen die met de ronding van een object meebuigen (bijv. om een appel heen) om volume te tonen.</li>
+              </ul>
+            `,
+            artworkTitle: 'Jonge Haas (1502)',
+            artist: 'Albrecht Dürer',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Albrecht_D%C3%BCrer_-_Feldhase_%281502%29.jpg/500px-Albrecht_D%C3%BCrer_-_Feldhase_%281502%29.jpg',
+            artworkAnalysis: 'Dürer tekende met ongekende precisie duizenden dunne arceerlijntjes die de haren van de vacht exact volgen (vormvolgende arcering), waardoor de haas aaibaar echt lijkt.',
+            extraTheory: 'Let op: Vormvolgende lijnen buigen mee met de 3D-vorm. Kruisarcering ontstaat door over elkaar gekruiste lijnen. Dürer is de meester van textuur door arcering.',
+            drawingTaskTitle: 'Vormvolgende Arcering',
+            drawingTaskInstruction: 'Teken een bolle vorm (zoals een sinaasappel of ei) en gebruik gebogen arceerlijnen om de ronding voelbaar te maken.',
+            quizA: [
+              { q: 'Wat is de specifieke werking van vormvolgende arcering?', opts: ['Lijnen lopen altijd kaarsrecht horizontaal', 'Lijnen volgen de welvingen van het object om volume te tonen', 'Lijnen maken het papier volledig zwart', 'Lijnen wisselen willekeurig van kleur'], correct: 1 },
+              { q: 'Welke meester-tekenaar staat bekend om zijn uiterst gedetailleerde prenten en dierenstudies met arcering?', opts: ['Albrecht Dürer', 'Piet Mondriaan', 'Claude Monet', 'Andy Warhol'], correct: 0 },
+              { q: 'Wat is de definitie van kruisarcering?', opts: ['Lijnen die parallel naast elkaar lopen zonder elkaar te raken', 'Meerdere lagen arcering die elkaar kruisen onder verschillende hoeken', 'Het maken van kleine vierkantjes met verf', 'Een lijn die abrupt stopt'], correct: 1 },
+              { q: 'Waarvoor dient stofuitdrukking in een tekening?', opts: ['Het schoonmaken van je tekenbord', 'Het visueel weergeven van het materiaal (zoals zachte vacht, glad metaal of ruw steen)', 'Het insmeren van het doek met lijm', 'Het tekenen van gordijnen'], correct: 1 },
+              { q: 'Hoe geef je een glimmend metaal effect weer met lijnen?', opts: ['Door heel zachtjes overal te arceren', 'Door harde contrasten tussen donkere arcering en spierwitte reflectielijnen', 'Door alleen maar cirkels te tekenen', 'Door het papier grijs te maken'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Waarom buigen arceerlijnen mee bij een cilinder of vaas?', opts: ['Dat gebeurt per ongeluk', 'Om de 3D-ronding van het voorwerp te versterken', 'Om te voorkomen dat de pen leegraakt', 'Omdat rechte lijnen verboden zijn'], correct: 1 },
+              { q: 'Wat is het verschil tussen enkele en dubbele (kruis)arcering?', opts: ['Bij kruisarcering snijden de lijnen elkaar voor extra donkerte', 'Enkele arcering is altijd rood', 'Kruisarcering mag alleen op doek', 'Er is geen enkel verschil'], correct: 0 },
+              { q: 'Wat zie je in Dürer\'s "Jonge Haas"?', opts: ['Een abstract patroon van vlekken', 'Onaantastbare vachttextuur door vormvolgende fijne lijntjes', 'Enkel strakke geometrische lijnen', 'Fotografische overdruk'], correct: 1 },
+              { q: 'Hoe creëer je verloop van licht naar donker met arcering?', opts: ['Lijnen van wijd uit elkaar geleidelijk dichter op elkaar tekenen', 'Steeds harder op je gum drukken', 'De lijnen korter maken', 'Alleen de randen tekenen'], correct: 0 },
+              { q: 'Wat gebeurt er als je kruisarcering heel dicht op elkaar plaatst?', opts: ['Er ontstaat een diepe, donkere schaduwzone', 'De plek wordt felgeel', 'Het papier scheurt automatisch', 'De tekening verliest alle schaduw'], correct: 0 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Expressieve Lijn & Minimalisme',
+            theoryTitle: 'De Kracht van de Eenvoudige Lijn',
+            theoryText: `
+              <p>Een lijn kan ook uiterst minimaal zijn. Met slechts enkele trefzekere lijnen kan een grote kunstenaar een compleet figuur of een emotie vangen.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Contourtekening in één beweging (Continuous Line):</strong> Tekenen zonder je potlood van het papier te tillen.</li>
+                <li><strong>Expressieve streek:</strong> Lijnen met variërende dikte (van flpaperdun naar dik en krachtig) die emotie uitstralen.</li>
+                <li><strong>Minimalisme:</strong> Alles wat overbodig is weglaten tot alleen de essentie overblijft.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Stier (1945)',
+            artist: 'Pablo Picasso',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Pablo_Picasso%2C_1909-10%2C_Figur_af_kvinde_%28Woman_with_a_Mandolin%29.jpg/500px-Pablo_Picasso%2C_1909-10%2C_Figur_af_kvinde_%28Woman_with_a_Mandolin%29.jpg',
+            artworkAnalysis: 'Picasso maakte een beroemde reeks prenten waarin hij een realistisch gespierde stier stap voor stap ontleedde, tot er uiteindelijk slechts enkele geniale, krachtige contourlijnen overbleven.',
+            extraTheory: 'Onthoud: Diktevariatie geeft dynamiek aan een lijn. Picasso toonde hoe je met minimale lijnen toch de essentie van een vorm vult.',
+            drawingTaskTitle: 'Eén-Lijn Tekening',
+            drawingTaskInstruction: 'Teken een gezicht of dier in één continue beweging zonder het virtuele potlood van het doek te halen.',
+            quizA: [
+              { q: 'Wat hield Picasso\'s studie van "De Stier" in?', opts: ['Het toevoegen van steeds meer details', 'Het stapsgewijs vereenvoudigen van de stier tot minimale essentiële lijnen', 'Het schilderen van de stier in felle kleuren', 'Het maken van een 3D standbeeld'], correct: 1 },
+              { q: 'Wat is een "Continuous Line Drawing" (één-lijntekening)?', opts: ['Een tekening die met een liniaal is gemaakt', 'Een tekening gemaakt in één ononderbroken lijn zonder het potlood op te tillen', 'Een lijn die oneindig doorloopt over de muur', 'Een verzameling losse stippen'], correct: 1 },
+              { q: 'Wat bereik je door variatie aan te brengen in de dikte van je lijn (van dun naar dik)?', opts: ['Er ontstaat ritme, spanning en een gevoel van gewicht', 'De tekening wordt onleesbaar', 'Het maakt de tekening altijd lelijk', 'Het wist de achtergrond uit'], correct: 0 },
+              { q: 'Wat betekent "minimalisme" in de context van lijnkunst?', opts: ['Zoveel mogelijk lijnen over elkaar tekenen', 'Met zo min mogelijk middelen/lijnen de maximale essentie weergeven', 'Alleen met piepkleine potloodjes werken', 'Geen lijnen maar vlekken gebruiken'], correct: 1 },
+              { q: 'Welk gevoel straalt een vloeiende, zachte lijn meestal uit?', opts: ['Rust, elegantie en beweging', 'Agressie en hoekigheid', 'Lawaai en chaos', 'Gewichtloosheid van steen'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom is een variërende lijndikte interessanter dan een eentonige strakke lijn?', opts: ['Het gesuggereerde licht en schaduw worden direct voelbaar in de lijn zelf', 'Omdat dunne lijnen goedkoper zijn', 'Omdat het verplicht is in musea', 'Het heeft geen enkel effect'], correct: 0 },
+              { q: 'Hoe noem je het weglaten van details om tot de kernvorm te komen?', opts: ['Abstraheren / Vereenvoudigen', 'Kopiëren', 'Inkleuren', 'Fotograferen'], correct: 0 },
+              { q: 'Wat vereist het maken van een goeie minimale lijntekening?', opts: ['Tien uur lang schuren', 'Trefzekerheid en een scherp oog voor de essentie van de vorm', 'Dikke lagen verf', 'Een passer en passerpunt'], correct: 1 },
+              { q: 'Welke emotie roept een wilde, kriebelige en dikke lijn op?', opts: ['Onrust, energie of verwarring', 'Kalmte en sereniteit', 'IJzige kou', 'Symmetrisch evenwicht'], correct: 0 },
+              { q: 'Wat bewijst Picasso met zijn stier-studie?', opts: ['Dat realistisch tekenen de enige goeie kunst is', 'Dat een enkele lijn net zoveel kracht en karakter kan hebben als een uitgewerkt schilderij', 'Dat stieren niet kunnen vliegen', 'Dat zwarte inkt niet droogt'], correct: 1 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'compositie',
+        title: 'Compositie (2D & 3D)',
+        icon: 'fa-shapes',
+        color: 'emerald',
+        description: 'Ordening van beeldelementen, symmetrie, Regel van Derden.',
+        levels: [
+          {
+            id: 1,
+            title: 'Compositievormen & Symmetrie',
+            theoryTitle: 'De Opbouw van het Beeld',
+            theoryText: `
+              <p>Een <strong>compositie</strong> is de manier waarop een kunstenaar vormen, lijnen en kleuren op het vlak of in de ruimte ordent. De belangrijkste basisvormen zijn:</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Symmetrische compositie:</strong> Beide helften zijn vrijwel het spiegelbeeld van elkaar. Dit straalt rust, heiligheid en stabiliteit uit.</li>
+                <li><strong>Centrale compositie:</strong> Het belangrijkste onderwerp staat exact in het midden van het vlak.</li>
+                <li><strong>Driehoekscompositie:</strong> Elementen vormen een piramide/driehoek. Veel gebruikt in de renaissance voor evenwicht.</li>
+              </ul>
+            `,
+            artworkTitle: 'Het Laatste Avondmaal (1498)',
+            artist: 'Leonardo da Vinci',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Ultima_Cena_-_Leonardo_Da_Vinci_-_High_Resolution_Scale_Executive_Model.jpg/600px-Ultima_Cena_-_Leonardo_Da_Vinci_-_High_Resolution_Scale_Executive_Model.jpg',
+            artworkAnalysis: 'Da Vinci gebruikt een meesterlijke **symmetrische én centrale driehoekscompositie**. Jezus zit exact in het midden als rustpunt, terwijl de apostelen in groepen van drie voor symmetrisch evenwicht zorgen.',
+            extraTheory: 'Denk eraan: Symmetrie geeft RUST en evenwicht. Centrale plaatsing trekt direct de aandacht naar het midden. Driehoekscompositie zorgt voor piramidale stevigheid.',
+            drawingTaskTitle: 'Symmetrische Driehoek',
+            drawingTaskInstruction: 'Rangschik 3 of meer voorwerpen op het doek in een strakke symmetrische driehoekscompositie.',
+            quizA: [
+              { q: 'Welk gevoel straalt een symmetrische compositie voornamelijk uit?', opts: ['Chaos en hectiek', 'Rust, stabiliteit en evenwicht', 'Grote snelheid en spanning', 'Angst en verwarring'], correct: 1 },
+              { q: 'Waar bevindt het hoofdonderwerp zich bij een centrale compositie?', opts: ['Linksboven in de hoek', 'Precies in het geometrische midden van het werk', 'Helemaal onderaan aan de rand', 'Aan de achterkant van het doek'], correct: 1 },
+              { q: 'Welke vorm gebruiken klassieke meesters vaak voor een stabiele groep figuren?', opts: ['Een willekeurige spiraal', 'Een driehoek/piramide', 'Een strakke cirkel', 'Een rechte verticale lijn'], correct: 1 },
+              { q: 'Welke compositievorm is herkenbaar in Da Vinci’s "Het Laatste Avondmaal"?', opts: ['Een chaotische cirkelcompositie', 'Een strakke centrale driehoeks- en symmetrische compositie', 'Een willekeurige randcompositie', 'Een verticale balkcompositie'], correct: 1 },
+              { q: 'Wat is de functie van een "blikvanger" (focaal punt)?', opts: ['Het onderdeel op het doek waar de aandacht als eerste naar toe getrokken wordt', 'De buitenste houten lijst van het schilderij', 'Het handtekeningetje onderaan', 'Het kleinste puntje op het doek'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom pasten renaissanceschilders zo vaak driehoekscomposities toe?', opts: ['Omdat doeken altijd driehoekig waren', 'Omdat het oog natuurlijk naar de top van de piramide leidt en rust geeft', 'Om verf te besparen op de hoeken', 'Omdat ze geen vierkanten konden tekenen'], correct: 1 },
+              { q: 'Wat gebeurt er als je een schilderij exact symmetrisch maakt?', opts: ['Het krijgt een statische, formele en rustige uitstraling', 'Het wordt heel wild en chaotisch', 'Het schilderij valt om', 'Alle kleuren veranderen'], correct: 0 },
+              { q: 'Wat is het verschil tussen een symmetrische en asymmetrische compositie?', opts: ['Bij symmetrie zijn beide helften in balans/spiegelbeeld, bij asymmetrie niet', 'Asymmetrie is altijd zwart-wit', 'Symmetrie mag alleen op papier', 'Er is geen verschil'], correct: 0 },
+              { q: 'Hoe noem je de rangschikking van elementen op een kunstwerk?', opts: ['Inkleuring', 'Compositie', 'Perspectief', 'Textuur'], correct: 1 },
+              { q: 'Waarom staat Jezus bij Da Vinci centraal?', opts: ['Omdat hij de belangrijkste blikvanger en het rustpunt van de scène is', 'Per ongeluk zo getekend', 'Omdat de zijkanten vol waren', 'Om de horizon te bedekken'], correct: 0 }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Dynamiek & Regel van Derden',
+            theoryTitle: 'Spanning en Beweging',
+            theoryText: `
+              <p>Wanneer een kunstenaar actie, energie of spanning wil oproepen, vermijdt hij het strakke midden en symmetrie.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Diagonaalcompositie:</strong> Lijnen lopen schuin over het doek. Dit suggereert beweging, snelheid of een val.</li>
+                <li><strong>Regel van Derden:</strong> Verdeel het doek met 2 horizontale en 2 verticale lijnen in 9 gelijke vakken. Plaats je blikvanger op een van de 4 snijpunten!</li>
+                <li><strong>Overall-compositie:</strong> Geen enkel punt trekt alle aandacht; het hele doek is gelijkmatig bedekt (zoals bij Jackson Pollock).</li>
+              </ul>
+            `,
+            artworkTitle: 'De Grote Golf bij Kanagawa (1831)',
+            artist: 'Katsushika Hokusai',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Tsunami_by_hokusai_19th_century.jpg/600px-Tsunami_by_hokusai_19th_century.jpg',
+            artworkAnalysis: 'Hokusai gebruikt een krachtige **diagonaal- en spiraalcompositie**. De reusachtige golf schiet van linksonder diagonaal omhoog, wat een overweldigend gevoel van dynamiek creëert.',
+            extraTheory: 'Onthoud: Schuine diagonaallijnen creëren actie. De Regel van Derden gebruikt een 3x3 raster met 4 ideale snijpunten voor je blikvanger.',
+            drawingTaskTitle: 'Diagonale Dynamiek',
+            drawingTaskInstruction: 'Teken een bewegend actiemoment (zoals een storm, rijdende auto of sporter) volgens een schuine diagonaalcompositie.',
+            quizA: [
+              { q: 'Waarom passen kunstenaars een diagonaalcompositie toe?', opts: ['Om het schilderij kleiner te maken', 'Om dynamiek, spanning en beweging te suggereer', 'Om het doek volledig zwart te maken', 'Om symmetrie te bereiken'], correct: 1 },
+              { q: 'Wat houdt de Regel van Derden in?', opts: ['Je gebruikt exact drie kleuren', 'Je verdeelt het vlak in 3x3 vakken en plaatst blikvangers op de snijpunten', 'Je tekent drie cirkels op een rij', 'Je schildert drie lagen over elkaar'], correct: 1 },
+              { q: 'Hoeveel ideale snijpunten ontstaan er bij het raster van de Regel van Derden?', opts: ['2', '4', '6', '9'], correct: 1 },
+              { q: 'Wat zie je in Hokusai\'s prent van "De Grote Golf"?', opts: ['Een saaie symmetrische vijver', 'Een dynamische diagonale golf die dreigend overstroomt', 'Een strakke centrale vierkantcompositie', 'Alleen maar rechte verticale palen'], correct: 1 },
+              { q: 'Wat is een "Overall-compositie"?', opts: ['Een compositie waarbij alle onderdelen gelijkmatig over het hele vlak verdeeld zijn', 'Een compositie met één hele grote bal in het midden', 'Een schilderij dat alleen aan de bovenkant geverfd is', 'Een tekening op kleding'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom is een blikvanger op een snijpunt van de Regel van Derden vaak mooier dan exact in het midden?', opts: ['Het oog vindt deze asymmetrische plek spannender en natuurlijker', 'Omdat het midden altijd te donker is', 'Omdat het doek daar sterker is', 'Dat is wettelijk verplicht'], correct: 0 },
+              { q: 'Welke lijnrichting veroorzaakt de meeste visuele actie?', opts: ['Horizontale lijn', 'Diagonale schuine lijn', 'Verticale rechte lijn', 'Een kleine stip'], correct: 1 },
+              { q: 'Wat gebeurt er als je alle elementen willekeurig in één hoek propt?', opts: ['Er ontstaat een onbalans/asymmetrische spanning', 'Het wordt automatisch symmetrisch', 'De andere hoeken worden rood', 'Het schilderij wordt driedimensionaal'], correct: 0 },
+              { q: 'Hoe wordt de Regel van Derden ook wel genoemd in de fotografie?', opts: ['The Rule of Thirds', 'Golden Square', 'Center Focus', 'Full Frame'], correct: 0 },
+              { q: 'Welk gevoel roept een strakke horizontale compositie op?', opts: ['Heftige actie en val', 'Rust, weidsheid en sereniteit (zoals een landschap)', 'Angst en paniek', 'Chaos'], correct: 1 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Kader, Afsnijding & Layout',
+            theoryTitle: 'Het Kijken Sturen',
+            theoryText: `
+              <p>De manier waarop een kunstenaar de randen van zijn werk gebruikt bepaalt hoe de toeschouwer de ruimte eromheen ervaart.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Afsnijding:</strong> Vormen worden door de rand van het kader afgesneden. Dit geeft de indruk dat de voorstelling buiten het doek doorloopt.</li>
+                <li><strong>Kader/Formaat:</strong> Staand (verticaal, monumentaal), Liggend (horizontaal, panoramisch) of Vierkant.</li>
+                <li><strong>Lijnwerk & Kijklijnen:</strong> Lijnen in het werk die het oog van de kijker bewust naar het belangrijkste punt sturen.</li>
+              </ul>
+            `,
+            artworkTitle: 'De School van Athene (1511)',
+            artist: 'Rafaël Sanzio',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg/600px-%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg',
+            artworkAnalysis: 'Rafaël gebruikt bogen en perspectivische **kijklijnen** die alle filosofen kaderen en jouw oog onweerstaanbaar sturen naar de twee centrale figuren: Plato en Aristoteles.',
+            extraTheory: 'Onthoud: Afsnijding laat een vorm doorlopen buiten het kader. Kijklijnen sturen de blik van de toeschouwer naar het centrum van het verhaal.',
+            drawingTaskTitle: 'Afsnijding & Kijklijnen',
+            drawingTaskInstruction: 'Teken een scène waarbij ten minste één belangrijk figuur gedeeltelijk door de doekrand wordt afgesneden.',
+            quizA: [
+              { q: 'Wat bereikt een kunstenaar met de techniek "afsnijding"?', opts: ['Hij knipt het doek doormidden', 'Hij suggereert dat de voorstelling buiten het kader van de tekening doorloopt', 'Hij wist de randen van het papier uit', 'Hij kleurt alleen het midden in'], correct: 1 },
+              { q: 'Wat zijn kijklijnen in een kunstwerk?', opts: ['De lijnen van een bril', 'Onzichtbare of zichtbare sturende lijnen die het oog naar het belangrijkste punt leiden', 'Lijnen die op de achterkant staan', 'De randen van de ezel'], correct: 1 },
+              { q: 'Welk formaat kader kies je het beste voor een weids landschap?', opts: ['Strak verticaal smal kader', 'Liggend/horizontaal panoramisch kader', 'Een klein rondje', 'Een driehoek'], correct: 1 },
+              { q: 'Hoe stuurt Rafaël de blik in "De School van Athene"?', opts: ['Door felle rode pijlstickers', 'Door de perspectieflijnen van de bogen samen te laten komen bij Plato en Aristoteles', 'Door de rest van het doek zwart te maken', 'Door de figuren ondersteboven te zetten'], correct: 1 },
+              { q: 'Wat voor sfeer roept een hoog verticaal kader (portrait) vaak op?', opts: ['Monumentaliteit, lengte en hoogte', 'Snelheid naar rechts', 'Rustige brede weidsheid', 'Geen enkele sfeer'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom werd afsnijding erg populair na de uitvinding van de fotografie?', opts: ['Omdat foto\'s lieten zien hoe een toevallige uitsnede een dynamisch momentopnamegevoel geeft', 'Omdat schilders geen verf meer hadden', 'Omdat kaders verplicht vierkant werden', 'Omdat lenzen rond waren'], correct: 0 },
+              { q: 'Wat gebeurt er als je een figuur precies aan de rand van het papier doormidden snijdt?', opts: ['De kijker vult het ontbrekende deel in gedachten aan buiten het doek', 'Het figuur valt van de muur', 'De tekening is mislukt', 'Het figuur verandert in een cirkel'], correct: 0 },
+              { q: 'Wat is het effect van veel herhaalde verticale lijnen in een compositie?', opts: ['Een gevoel van hoogte, waardigheid of stilstaande bomen/pijlers', 'Extreme snelheid naar links', 'Een ronddraaiend gevoel', 'Chaos'], correct: 0 },
+              { q: 'Hoe werkt een kader als "venster op de werkelijkheid"?', opts: ['Het kader begrenst slechts een uitsnede van een grotere virtuele wereld', 'Het sluit het schilderij af van de buitenwereld', 'Het maakt de kamer donker', 'Het spiegelt de toeschouwer'], correct: 0 },
+              { q: 'Wat is de beste plek voor een blikvanger als je kijker wil verrassen?', opts: ['Een licht asymmetrische plek ondersteund door subtiele kijklijnen', 'Achterop het doek', 'Buiten de kamer', 'Onder een dikke laag zwarte verf'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'kleur',
+        title: 'Kleur & Kleurcontrasten',
+        icon: 'fa-palette',
+        color: 'rose',
+        description: 'Primaire/secondaire kleuren, complementair, warm-koud contrast.',
+        levels: [
+          {
+            id: 1,
+            title: 'Kleurenleer & Contrasten',
+            theoryTitle: 'De Macht van Kleur',
+            theoryText: `
+              <p>Kleur bepaalt voor een groot deel de sfeer van een kunstwerk. In de kleurencirkel van Johannes Itten onderscheiden we:</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Primaire kleuren:</strong> Rood, Geel en Blauw (kunnen niet gemengd worden uit andere kleuren).</li>
+                <li><strong>Secondaire kleuren:</strong> Oranje, Groen en Paars (gemengd uit twee primaire kleuren).</li>
+                <li><strong>Complementair contrast:</strong> Kleuren die recht tegenover elkaar staan in de cirkel (bijv. Rood & Groen, Blauw & Oranje). Ze laten elkaar spatten!</li>
+              </ul>
+            `,
+            artworkTitle: 'Impressie, Opgaande Zon (1872)',
+            artist: 'Claude Monet',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Monet_-_Impression%2C_Soleil_levant.jpg/600px-Monet_-_Impression%2C_Soleil_levant.jpg',
+            artworkAnalysis: 'Monet gebruikt hier een prachtig **complementair contrast**. De felle oranje zon knalt eruit tegen de koele blauw-grijze lucht en het water.',
+            extraTheory: 'Vergeet niet: Rood + Blauw = Paars. Blauw + Geel = Groen. Geel + Rood = Oranje. Complementaire paren staan TEGENOVER elkaar in de cirkel (Rood/Groen, Blauw/Oranje, Geel/Paars).',
+            drawingTaskTitle: 'Complementair Contrast',
+            drawingTaskInstruction: 'Kies één complementair paar (bijv. Blauw en Oranje) en maak een tekening waarin deze twee kleuren elkaar versterken.',
+            quizA: [
+              { q: 'Welke drie kleuren zijn de primaire kleuren?', opts: ['Groen, Oranje, Paars', 'Rood, Geel, Blauw', 'Zwart, Wit, Grijs', 'Rood, Groen, Blauw'], correct: 1 },
+              { q: 'Hoe ontstaat de secondaire kleur Oranje?', opts: ['Door Blauw en Geel te mengen', 'Door Rood en Geel te mengen', 'Door Rood en Blauw te mengen', 'Door Groen en Wit te mengen'], correct: 1 },
+              { q: 'Wat zijn complementaire kleuren?', opts: ['Kleuren die naast elkaar staan in de cirkel', 'Kleuren die recht tegenover elkaar staan in de kleurencirkel', 'Alle lichte pastelkleuren', 'Alleen de kleuren zwart en wit'], correct: 1 },
+              { q: 'Welk kleurenpaar vormt een complementair contrast?', opts: ['Geel en Rood', 'Blauw en Oranje', 'Groen en Blauw', 'Paars en Rood'], correct: 1 },
+              { q: 'Wat gebeurt er als je twee complementaire kleuren direct naast elkaar zet?', opts: ['Ze versterken elkaars helderheid en intensiteit enorm', 'Ze worden onzichtbaar', 'Ze veranderen in goud', 'Ze worden allebei pikzwart'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Wat is de complementaire kleur van Rood?', opts: ['Geel', 'Blauw', 'Groen', 'Oranje'], correct: 2 },
+              { q: 'Wat is de complementaire kleur van Geel?', opts: ['Groen', 'Paars', 'Oranje', 'Rood'], correct: 1 },
+              { q: 'Hoe noem je de kleuren Groen, Oranje en Paars samen?', opts: ['Primaire kleuren', 'Secondaire kleuren', 'Tertiaire kleuren', 'Monochrome kleuren'], correct: 1 },
+              { q: 'Waarom gebruikte Claude Monet een oranje zon tegen een blauwe lucht?', opts: ['Omdat hij geen andere verf meer had', 'Om door complementair contrast de zon maximaal te laten spetteren', 'Om de zon te verbergen', 'Omdat oranje en blauw identieke kleuren zijn'], correct: 1 },
+              { q: 'Wat ontstaat er als je twee complementaire kleuren met elkaar MENGT op je palet?', opts: ['Een nog fellere kleur', 'Een neutrale, troebele grijze/bruine tint', 'Sneeuwwit', 'Lichtblauw'], correct: 1 }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Warm-Koud & Sfeer',
+            theoryTitle: 'Temperatuur op het Doek',
+            theoryText: `
+              <p>Kleuren roepen direct emoties en fysieke gevoelens van temperatuur op.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Warme kleuren:</strong> Rood, oranje, geel. Ze roepen vuur, zon, passie en gezelligheid op. Warme kleuren komen optisch naar voren!</li>
+                <li><strong>Koude kleuren:</strong> Blauw, groen, paars. Ze herinneren aan ijs, water, nacht en rust. Koude kleuren wijken optisch naar achteren.</li>
+                <li><strong>Warm-Koud contrast:</strong> Door warm en koud te combineren creëer je ruimtelijke diepte en temperatuurspanning.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Blauwe Paarden (1911)',
+            artist: 'Franz Marc',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Franz_Marc_011.jpg/600px-Franz_Marc_011.jpg',
+            artworkAnalysis: 'Franz Marc gebruikt droomachtige **expressieve kleuren**. De paarden zijn intens koud-blauw geschilderd tegen een vurige, warme rood-gele achtergrond voor een krachtig warm-koud contrast.',
+            extraTheory: 'Onthoud: Warme kleuren (rood/geel) komen naar voren. Koude kleuren (blauw/groen) gaan naar achteren. Dit helpt bij het schilderen van diepte!',
+            drawingTaskTitle: 'Warm vs Koud',
+            drawingTaskInstruction: 'Teken een warm hoofdonderwerp (bijv. een kampvuur of rode draak) tegen een ijzig koude blauw/groene achtergrond.',
+            quizA: [
+              { q: 'Welke kleurengroep roept een gevoel van warmte, vuur en energie op?', opts: ['Blauw, paars en donkergroen', 'Rood, oranje en geel', 'Grijs, wit en zwart', 'Lichtblauw en turquoise'], correct: 1 },
+              { q: 'Wat is het optische effect van warme kleuren in een schilderij?', opts: ['Ze lijken naar voren te komen richting de kijker', 'Ze wijken ver naar de achtergrond', 'Ze verdwijnen volledig', 'Ze lijken altijd grijs'], correct: 0 },
+              { q: 'Wat gebeurt er met koude kleuren op een doek?', opts: ['Ze lijken naar de achtergrond te wijken', 'Ze springen direct in je oog als eerste', 'Ze worden heet', 'Ze veranderen in rood'], correct: 0 },
+              { q: 'Waarom schilderde Franz Marc zijn paarden felblauw?', opts: ['Omdat echte paarden blauw zijn', 'Om spirituele rust en koude zuiverheid uit te drukken tegen de warme achtergrond', 'Omdat de rode verf op was', 'Per ongeluk'], correct: 1 },
+              { q: 'Welke van onderstaande kleuren is een uitgesproken KOELE kleur?', opts: ['Scharlakenrood', 'Zonnegeel', 'IJsblauw', 'Mandarijnoranje'], correct: 2 }
+            ],
+            quizB: [
+              { q: 'Hoe helpt een warm-koud contrast bij het suggereren van diepte?', opts: ['Warme voorgrondelementen komen naar voren, koele achtergronden wijken weg', 'Het maakt de afbeelding plat', 'Door alle kleuren koud te maken', 'Het heeft geen effect'], correct: 0 },
+              { q: 'Welk gevoel roept een schilderij op dat uitsluitend uit blauw- en grijstinten bestaat?', opts: ['Melancholie, stilte, kou of rust', 'Extreme woede en koorts', 'Zomerse tropische hitte', 'Vrolijke drukte'], correct: 0 },
+              { q: 'Welke kleurcombinatie vormt een strak warm-koud contrast?', opts: ['Rood en Oranje', 'Diepblauw en Vuuroranje', 'Groen en Geel', 'Grijs en Zwart'], correct: 1 },
+              { q: 'Wat is expressief kleurgebruik?', opts: ['Kleuren gebruiken die precies met de werkelijkheid overeenkomen', 'Kleuren gebruiken om gevoelens en emoties uit te drukken in plaats van de werkelijkheid', 'Alleen zwarte inkt gebruiken', 'Schilderen met gesloten ogen'], correct: 1 },
+              { q: 'Wat gebeurt er als je een warme rode roos op een koude blauwe achtergrond tekent?', opts: ['De roos springt er extra krachtig uit', 'De roos wordt paars', 'De achtergrond verdwijnt', 'Het doek scheurt'], correct: 0 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Kwaliteit, Kwantiteit & Monochroom',
+            theoryTitle: 'Nuances en Verhoudingen',
+            theoryText: `
+              <p>Naast kleursoort en temperatuur spelen verzadiging en oppervlaktegrootte een enorme rol.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Kwaliteitscontrast:</strong> Het verschil tussen felle, zuivere (verzadigde) kleuren en doffe, troebele (gebroken) kleuren.</li>
+                <li><strong>Kwantiteitscontrast:</strong> Het verschil in oppervlaktegrootte tussen twee kleurvlakken. Een klein rood vlekje kan een heel groot groen vlak balanceren!</li>
+                <li><strong>Monochroom:</strong> Werken met slechts één enkele kleurfamilie in verschillende lichte en donkere tonen (bijv. alom blauw).</li>
+              </ul>
+            `,
+            artworkTitle: 'Compositie met Rood, Geel en Blauw (1921)',
+            artist: 'Piet Mondriaan',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Piet_Mondrian%2C_1921_-_Composition_en_rouge%2C_jaune%2C_bleu_et_noir.jpg/500px-Piet_Mondrian%2C_1921_-_Composition_en_rouge%2C_jaune%2C_bleu_et_noir.jpg',
+            artworkAnalysis: 'Mondriaan balanceert hier meesterlijk het **kwantiteitscontrast**. Het grote rode vlak rechtsboven wordt perfect in evenwicht gehouden door de veel kleinere vlakjes fel geel en blauw onderin.',
+            extraTheory: 'Onthoud: Kwantiteit = oppervlaktegrootte. Kwaliteit = fel/zuiver vs dof/gebroken. Monochroom = variaties van één enkele kleur.',
+            drawingTaskTitle: 'Kwantiteitsbalans',
+            drawingTaskInstruction: 'Maak een abstracte compositie met één heel groot neutraal/dof vlak en één heel klein maar spetterend fel kleuraccent.',
+            quizA: [
+              { q: 'Wat verstaan we onder een kwantiteitscontrast?', opts: ['Het verschil in prijs van de verftubes', 'Het verschil in oppervlaktegrootte tussen verschillende kleurvlakken', 'Het gewicht van het schilderij', 'Aantal gebruikte penseelstreken'], correct: 1 },
+              { q: 'Hoe hield Piet Mondriaan zijn abstracte composities in balans?', opts: ['Door een heel groot rood vlak af te wegen tegen kleinere vlakjes geel en blauw', 'Door alles rood te verven', 'Door stippen te zetten', 'Door spiegels te gebruiken'], correct: 0 },
+              { q: 'Wat is een kwaliteitscontrast?', opts: ['Het verschil tussen dure en goedkope verf', 'Het contrast tussen heldere/verzadigde en doffe/gebroken kleuren', 'Het contrast tussen dik papier en dun papier', 'Het verschil tussen potlood en pen'], correct: 1 },
+              { q: 'Wat betekent het begrip "Monochroom"?', opts: ['Een werk opgebouwd uit talloze felle regenboogkleuren', 'Een werk uitgevoerd in nuancevariaties van slechts één enkele kleur', 'Een schilderij zonder verf', 'Een foto met drie kaders'], correct: 1 },
+              { q: 'Waarom heeft geel minder oppervlakte nodig dan paars om evenveel op te vallen?', opts: ['Omdat geel van zichzelf een heel hoge lichtkracht heeft', 'Omdat geel zwaarder is', 'Omdat paars altijd lelijk is', 'Dat is niet zo, paars valt meer op'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Hoe kun je een kleur "breken" of minder fel maken (kwaliteit verlagen)?', opts: ['Door er een beetje grijs, wit of zijn complementaire kleur door te mengen', 'Door er water over te gieten', 'Door er harder op te stampen', 'Door de tube dicht te draaien'], correct: 0 },
+              { q: 'Wat gebeurt er als je één klein felrood stipje zet op een reusachtig dofblauw vlak?', opts: ['Het kleine rode stipje trekt direct als een magneet alle aandacht (kwantiteitscontrast)', 'Het stipje verdwijnt', 'Het doek wordt rood', 'Het blauw wordt geel'], correct: 0 },
+              { q: 'Wat is de definitie van verzadiging van een kleur?', opts: ['De zuiverheid en intensiteit van het pigment', 'De hoeveelheid water op het doek', 'De grootte van de kwast', 'De droogtijd'], correct: 0 },
+              { q: 'Welke sfeer heeft een monochroom blauwe tekening vaak?', opts: ['Enorme rust, eenheid en sereniteit', 'Wilde chaotische drukte', 'Duidelijke regenboogvrolijkheid', 'Geometrische paniek'], correct: 0 },
+              { q: 'Wat was het doel van kunstbeweging De Stijl (Mondriaan)?', opts: ['Harmonie zoeken met uitsluitend de primaire kleuren, zwart, wit en grijzen', 'Bloemen zo echt mogelijk namaken', 'Rommelige vlekken maken', 'Alleen met goud werken'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'vorm',
+        title: 'Vorm & Restvorm',
+        icon: 'fa-square',
+        color: 'amber',
+        description: 'Geometrisch vs organisch, figuur-grond, restvormen.',
+        levels: [
+          {
+            id: 1,
+            title: 'Geometrie & Restvorm',
+            theoryTitle: 'Vormen en de Ruimte Er omheen',
+            theoryText: `
+              <p>In de kunst kijken we niet alleen naar het object zelf (de <strong>positieve vorm</strong>), maar ook naar de ruimte eromheen (de <strong>restvorm</strong> of negatieve vorm):</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Geometrische vormen:</strong> Strakke, wiskundige vormen zoals vierkanten, cirkels en driehoeken.</li>
+                <li><strong>Organische vormen:</strong> Natuurlijke, vloeiende en onregelmatige vormen (zoals planten, mensen en wolken).</li>
+                <li><strong>Restvorm:</strong> De lege ruimte die overblijft tússen of rondom de hoofdvormen.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Parkiet en de Zeemeermin (1952)',
+            artist: 'Henri Matisse',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Matisse_The_Sheaf_1953.jpg/500px-Matisse_The_Sheaf_1953.jpg',
+            artworkAnalysis: 'Matisse knipte uit gekleurd papier speelse **organische plantvormen**. De witte achtergrond die tussen de bladeren overblijft vormt net zo\'n belangrijk onderdeel van het kunstwerk als de bladeren zelf!',
+            extraTheory: 'Denk eraan: Geometrisch = strak/wiskundig (vierkant, cirkel). Organisch = natuurlijk/vloeiend (blad, dier). Restvorm = de tussenruimte.',
+            drawingTaskTitle: 'Positief & Negatief',
+            drawingTaskInstruction: 'Teken een schaar of stoel en kleur alléén de restruimte (de achtergrond/tussenruimtes) donker in.',
+            quizA: [
+              { q: 'Wat is een kenmerk van een organische vorm?', opts: ['Strak wiskundig met passer en liniaal getekend', 'Natuurlijk, vloeiend en onregelmatig', 'Altijd een perfect vierkant', 'Bestaat alleen uit rechte hoeken van 90 graden'], correct: 1 },
+              { q: 'Wat verstaan we onder de "restvorm"?', opts: ['De afvalresten van het papier', 'De lege ruimte rondom en tussen de hoofdvormen', 'De ondertekening die is uitgeveegd', 'De achterkant van de lijst'], correct: 1 },
+              { q: 'Welke van deze opties is een geometrische vorm?', opts: ['Een eikenblad', 'Een wolk', 'Een kubus of driehoek', 'Een rivierverloop'], correct: 2 },
+              { q: 'Hoe maakte Henri Matisse zijn kunstwerken in zijn latere periode (Cut-Outs)?', opts: ['Door met potlood heel dun te arceren', 'Door organische vormen uit gekleurd papier te knippen en op te plakken', 'Door klei te bakken', 'Door foto\'s te maken'], correct: 1 },
+              { q: 'Wat is de "positieve vorm" in een tekening van een vaas op tafel?', opts: ['De lucht rondom de vaas', 'De vaas zelf', 'De schaduw onder de tafel', 'Het hele lege tekenpapier'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Hoe noem je een vorm die door een mens met wiskundige middelen is geconstrueerd?', opts: ['Organische vorm', 'Geometrische vorm', 'Restvorm', 'Amorfe vorm'], correct: 1 },
+              { q: 'Wat gebeurt er als je de restvorm inkleurt in plaats van het object zelf?', opts: ['Het object wordt zichtbaar als witte uitsparing', 'Het tekenpapier lost op', 'De tekening verandert in een foto', 'Er ontstaat een geometrische lijn'], correct: 0 },
+              { q: 'Welke stelling over organische vormen is WAAR?', opts: ['Ze hebben altijd hoeken van exact 90 graden', 'Ze zijn geïnspireerd op vloeiende vormen uit de natuur', 'Ze kunnen nooit geschilderd worden', 'Ze bestaan uitsluitend in 3D'], correct: 1 },
+              { q: 'Waarom besteedde Matisse zoveel aandacht aan de lege plekken tussen papierknipsels?', opts: ['Omdat de restvormen het ritme en de balans van de compositie bepalen', 'Omdat hij te weinig papier had', 'Per ongeluk', 'Omdat de lijm anders niet droogde'], correct: 0 },
+              { q: 'Wat is de functie van bewuste aandacht voor restvormen?', opts: ['Het maakt een compositie evenwichtiger, spannender en ruimtelijker', 'Het bespaart verf', 'Het maakt de tekening kleiner', 'Het wist fouten uit'], correct: 0 }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Figuur-Grond & Illusie',
+            theoryTitle: 'Wat is Figuur en Wat is Grond?',
+            theoryText: `
+              <p>Onze hersenen proberen altijd een onderscheid te maken tussen de voorgrond (het figuur) en de achtergrond (de grond).</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Omkeerbare figuur-grond:</strong> Een tekening waarbij voor- en achtergrond voortdurend van rol wisselen voor het oog.</li>
+                <li><strong>Symmetrische uitsparing:</strong> Twee gezichten in profiel die samen de contouren van een vaas/beker vormen (de beroemde Rubin Vaas).</li>
+                <li><strong>Silhouet:</strong> Een egaal donker ingevulde vorm waarbij alle binnendetails ontbreken, waardoor de omtreklijn superkrachtig wordt.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Rubin Vaas (1915)',
+            artist: 'Edgar Rubin',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Rubin2.svg/400px-Rubin2.svg.png',
+            artworkAnalysis: 'In deze beroemde **figuur-grond illusie** zie je óf een witte vaas op een zwarte achtergrond, óf twee zwarte gezichten die elkaar aankijken. Voor- en achtergrond wisselen continu in je brein!',
+            extraTheory: 'Onthoud: Figuur-grond illusies laten zien dat de achtergrond (restvorm) net zo een duidelijke vorm kan hebben als de voorgrond zelf.',
+            drawingTaskTitle: 'Vaas of Gezichten',
+            drawingTaskInstruction: 'Teken een klassieke Rubin-vaas illusie: teken 2 gespiegelde profielgezichten die samen in het midden een vaas vormen.',
+            quizA: [
+              { q: 'Wat gebeurt er bij een "omkeerbare figuur-grond illusie"?', opts: ['Het papier draait fysiek rond', 'Je hersenen twijfelen voortdurend wat de voorgrond en wat de achtergrond is', 'De kleuren verbleken', 'De tekening verdwijnt'], correct: 1 },
+              { q: 'Wat zie je in de beroemde "Rubin Vaas"?', opts: ['Een vaas óf twee gespiegelde gezichten in profiel', 'Een draak en een ridder', 'Enkel geometrische vierkanten', 'Een zonsondergang op zee'], correct: 0 },
+              { q: 'Wat is een "silhouet"?', opts: ['Een heel gedetailleerd portret met oogrimpels', 'Een egaal ingevulde donkere vorm zonder binnendetails', 'Een tekening van een skelet', 'Een wit vlak'], correct: 1 },
+              { q: 'Waarom zijn silhouetten zo herkenbaar?', opts: ['Omdat onze hersenen puur afgaan op de karaktereigenschappen van de omtreklijn', 'Omdat ze altijd rood zijn', 'Omdat ze bewegen', 'Omdat ze glimmen'], correct: 0 },
+              { q: 'Wat is het belangrijkste kenmerk van een krachtige restvorm?', opts: ['Dat de lege ruimte zelf een interessante en actieve vorm aanneemt', 'Dat de restvorm altijd leeg en wit blijft', 'Dat er stippen in staan', 'Dat hij onzichtbaar is'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Hoe kun je van een gewone tekening een figuur-grond puzzel maken?', opts: ['Door de restvorm exact dezelfde vormkwaliteit te geven als het hoofdonderwerp', 'Door het papier doormidden te scheuren', 'Door er een liniaal op te leggen', 'Door alle lijnen uit te gummen'], correct: 0 },
+              { q: 'Wat is "de grond" in de kunstterm figuur-grond?', opts: ['De vloer van het atelier', 'De achtergrond waar het hoofdonderwerp op staat', 'De klei waar een beeld van gemaakt is', 'De onderste rand van het doek'], correct: 1 },
+              { q: 'Welke bekende graficus maakte reeksen met metamorfoses tussen vogels en vissen?', opts: ['M.C. Escher', 'Claude Monet', 'Rembrandt', 'Vincent van Gogh'], correct: 0 },
+              { q: 'Waarom werkt een silhouet extra goed op een hele lichte achtergrond?', opts: ['Door het maximale licht-donker contrast tussen figuur en grond', 'Omdat lichte verf sneller droogt', 'Omdat zwarte inkt op wit papier verplicht is', 'Omdat het figuur dan verdwijnt'], correct: 0 },
+              { q: 'Wat ontstaat er als figuur en grond precies evenveel oppervlak beslaan?', opts: ['Optische twijfel en visuele spanning', 'Een zwarte vlek', 'Een 3D beeldhouwwerk', 'Geen enkel effect'], correct: 0 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Ruimtelijke Vorm & Massiviteit',
+            theoryTitle: 'Van Vlakke Vorm naar 3D Volume',
+            theoryText: `
+              <p>In driedimensionale kunst (beeldhouwkunst, architectuur) en op tekening spreken we van massa en ruimtelijkheid.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Massieve vorm:</strong> Een gesloten, zware en compacte 3D-vorm (zoals een rots of een stenen beeld).</li>
+                <li><strong>Open vorm:</strong> Een vorm met openingen, gaten of doorkijkjes waar de ruimte doorheen stroomt.</li>
+                <li><strong>Skeletvorm:</strong> Constructies opgebouwd uit stangen of draden (zoals de Eiffeltoren) waar de ruimte vrij spel heeft.</li>
+              </ul>
+            `,
+            artworkTitle: 'Compositie VII (1917)',
+            artist: 'Theo van Doesburg',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Theo_van_Doesburg_Composition_VII_1917.jpg/500px-Theo_van_Doesburg_Composition_VII_1917.jpg',
+            artworkAnalysis: 'Van Doesburg ontleedde architectuur en vormen in **geometrische open en gesloten blokken**. De ruimte tussen de zwevende blokken is minstens zo belangrijk als de blokken zelf.',
+            extraTheory: 'Onthoud: Massief = gesloten/zwaar. Open vorm = gaten/doorkijkjes. Skeletvorm = ijzeren draadconstructie.',
+            drawingTaskTitle: 'Open & Gesloten Vorm',
+            drawingTaskInstruction: 'Teken een ruimtelijk object dat deels massief gesloten is en deels grote openingen heeft waar je doorheen kijkt.',
+            quizA: [
+              { q: 'Wat is het kenmerk van een massieve vorm?', opts: ['Het heeft veel gaten en doorkijkjes', 'Het is een gesloten, zware en compacte vorm zonder openingen', 'Het zweeft in de lucht', 'Het is altijd gemaakt van papier'], correct: 1 },
+              { q: 'Wat is een open vorm in de beeldhouwkunst?', opts: ['Een museum dat gratis toegankelijk is', 'Een vorm met openingen en gaten waarin de omringende ruimte binnendringt', 'Een onafgemaakt beeld', 'Een doos zonder deksel'], correct: 1 },
+              { q: 'Welke bekende constructie is een perfect voorbeeld van een skeletvorm?', opts: ['De Eiffeltoren in Parijs', 'Een massieve marmeren piramide', 'Een houten dichte kist', 'Een bakstenen muur'], correct: 0 },
+              { q: 'Hoe omschrijf je de ruimtelijke werking van een sculptuur met veel openingen?', opts: ['De ruimte stroomt door het beeld heen, waardoor figuur en omgeving samensmelten', 'Het beeld wordt onzichtbaar', 'Het beeld valt direct uit elkaar', 'Het beeld krijgt meer gewicht'], correct: 0 },
+              { q: 'Welke vormuitdrukking past bij een zwerfkei of een bronzen gesloten kogel?', opts: ['Skeletvorm', 'Massieve vorm', 'Vloeibare vorm', 'Transparante vorm'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Waarom maken moderne beeldhouwers (zoals Henry Moore) vaak gaten in hun beelden?', opts: ['Om verf te besparen', 'Om de binnenruimte te tonen en wisselwerking met de omgeving te maken', 'Omdat het steen kapot ging', 'Om er doorheen te stappen'], correct: 1 },
+              { q: 'Wat is het verschil tussen een 2D vorm en een 3D vorm?', opts: ['2D heeft alleen lengte en breedte (plat); 3D heeft ook diepte/volume', '2D is altijd rood; 3D is altijd blauw', '2D kun je aanraken; 3D alleen bekijken', 'Er is geen verschil'], correct: 0 },
+              { q: 'Welk materiaal leent zich bij uitstek voor het maken van een ijle skeletvorm?', opts: ['Gietijzeren stangen of meugeldraad', 'Een massief blok marmer', 'Dikke klei', 'Bakstenen'], correct: 0 },
+              { q: 'Hoe beïnvloedt licht een massieve vorm versus een open vorm?', opts: ['Bij massief ontstaat één grote schaduwzone; bij open ontstaan complexe schaduwpatronen binnenshuis', 'Licht werkt alleen op massieve vormen', 'Een open vorm weerkaatst geen licht', 'Licht verandert de kleur'], correct: 0 },
+              { q: 'Wat bewijst Theo van Doesburg met zijn ruimtelijke composities?', opts: ['Dat geometrische zwevende vlakken samen ritme en ruimte vormen', 'Dat schilderen met olie op water moet', 'Dat huizen geen ramen nodig hebben', 'Dat zwarte verf niet droogt'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'ruimte',
+        title: 'Ruimte & Perspectief',
+        icon: 'fa-cubes',
+        color: 'indigo',
+        description: 'Lijnperspectief, horizon, verdwijnpunten en overlapping.',
+        levels: [
+          {
+            id: 1,
+            title: 'Horizon & 1-Puntsperspectief',
+            theoryTitle: 'Diepte Scheppen op een Plat Vlak',
+            theoryText: `
+              <p>Omdat tekenpapier plat (2D) is, gebruiken kunstenaars wiskundige regels om de illusie van <strong>ruimte en diepte (3D)</strong> te wekken:</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Horizon:</strong> De denkbeeldige ooghoogte van de kijker waar aarde en lucht elkaar lijken te raken.</li>
+                <li><strong>Verdwijnpunt:</strong> Het punt op de horizon waar alle wijkende lijnen (zoals een spoorweg) samenkomen.</li>
+                <li><strong>Overlapping:</strong> Vormen voorin dekken de vormen erachter gedeeltelijk af.</li>
+              </ul>
+            `,
+            artworkTitle: 'Het Straatje (1658)',
+            artist: 'Johannes Vermeer',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Jan_Vermeer_-_Het_straatje_-_Google_Art_Project.jpg/600px-Jan_Vermeer_-_Het_straatje_-_Google_Art_Project.jpg',
+            artworkAnalysis: 'Vermeer past **1-puntsperspectief, afsnijding en overlapping** toe. De gevels en het steegje wijken subtiel naar een verdwijnpunt, waardoor je zo het Delftse straatje in kijkt.',
+            extraTheory: 'Onthoud: Horizon = Ooghoogte. Verdwijnpunt = punt waar wijkende lijnen bij elkaar komen. Overlapping = voorste vorm bedekt achterste vorm.',
+            drawingTaskTitle: '1-Punt Perspectief Weg',
+            drawingTaskInstruction: 'Teken een horizon met 1 verdwijnpunt in het midden, en laat een weg of spoorlijn naar dit punt toe smaller worden.',
+            quizA: [
+              { q: 'Wat is de horizon in een perspectieftekening?', opts: ['De grens van de onderkant van het papier', 'De denkbeeldige lijn op ooghoogte van de toeschouwer', 'Een verticale lijn in de hoek', 'De dikste schaduwlijn'], correct: 1 },
+              { q: 'Wat is een verdwijnpunt?', opts: ['Een plek waar je gumfouten verstopt', 'Het punt op de horizon waar evenwijdige wijkende lijnen samenkeren', 'Het midden van een cirkel', 'De onderkant van het schilderij'], correct: 1 },
+              { q: 'Hoe zorgt "overlapping" voor dieptewerking?', opts: ['Door een vorm gedeeltelijk achter een andere vorm te plaatsen', 'Door alle vormen even groot te maken', 'Door felle kleuren te gebruiken', 'Door een gat in het papier te prikken'], correct: 0 },
+              { q: 'Wat gebeurt er met objecten naarmate ze verder in de diepte staan?', opts: ['Ze worden groter en gedetailleerder', 'Ze worden kleiner en minder gedetailleerd gedefinieerd', 'Ze veranderen van vorm', 'Ze worden felrood'], correct: 1 },
+              { q: 'Welke bekende Nederlandse schilder gebruikte nauwkeurig perspectief in Hollandse stadsgezichten?', opts: ['Karel Appel', 'Johannes Vermeer', 'Rembrandt van Rijn', 'Piet Mondriaan'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Waar bevinden verdwijnpunten zich bij standaard lijnperspectief?', opts: ['Op de horizonlijn', 'Helemaal bovenaan de lijst', 'In het palet van de schilder', 'Aan de rand van het papier'], correct: 0 },
+              { q: 'Hoe noem je de techniek waarbij een vorm aan de rand van het doek wordt afgesneden?', opts: ['Afsnijding', 'Overlapping', 'Arcering', 'Symmetrie'], correct: 0 },
+              { q: 'Als je vanuit een laag standpunt kijkt (kikkerperspectief), waar ligt de horizon dan?', opts: ['Heel hoog op het vlak', 'Heel laag op het vlak', 'Precies in het midden', 'Er is dan geen horizon'], correct: 1 },
+              { q: 'Wat gebeurt er met de afstand tussen tegelrijen als ze verder in de diepte liggen?', opts: ['De afstanden lijken steeds smaller te worden', 'De afstanden worden steeds groter', 'De afstanden blijven op papier exact even breed', 'Ze veranderen in cirkels'], correct: 0 },
+              { q: 'Waarom worden bomen langs een weg steeds korter getekend naarmate ze verder staan?', opts: ['Omdat bomen in de verte echt krimpen', 'Vanwege het optische effect van verkleining in de diepte', 'Omdat de verf opraakt', 'Omdat ze anders buiten het papier vallen'], correct: 1 }
+            ]
+          },
+          {
+            id: 2,
+            title: '2-Puntsperspectief & Standpunt',
+            theoryTitle: 'Hoeken en Standpunten',
+            theoryText: `
+              <p>Wanneer je op de hoek van een gebouw of straat kijkt, heb je twee verdwijnpunten nodig op de horizon.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>2-Puntsperspectief:</strong> Lijnen wijken naar TWEE verschillende verdwijnpunten (links en rechts op de horizon).</li>
+                <li><strong>Vogelperspectief:</strong> Hoge ooghoogte (alsof je als een vogel van boven naar beneden kijkt).</li>
+                <li><strong>Kikkerperspectief:</strong> Zeer lage ooghoogte (alsof je als een kikker vanaf de grond omhoog kijkt).</li>
+              </ul>
+            `,
+            artworkTitle: 'Parijs op een Regenachtige Dag (1877)',
+            artist: 'Gustave Caillebotte',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Gustave_Caillebotte_-_Paris_Street%3B_Rainy_Day_-_Google_Art_Project.jpg/600px-Gustave_Caillebotte_-_Paris_Street%3B_Rainy_Day_-_Google_Art_Project.jpg',
+            artworkAnalysis: 'Caillebotte gebruikt een haarscherp **2-puntsperspectief**. Het centrale gebouw vormt een punt op de voorgrond, met straatlijnen die zowel naar links als naar rechts wegvluchten op de horizon.',
+            extraTheory: 'Onthoud: 2-Puntsperspectief heeft verdwijnpunten links én rechts op de horizon. Vogelperspectief kijken van boven; kikkerperspectief van onderen.',
+            drawingTaskTitle: 'Gebouw op een Hoek',
+            drawingTaskInstruction: 'Teken de hoek van een gebouw met een horizon en 2 verdwijnpunten (één links, één rechts).',
+            quizA: [
+              { q: 'Wanneer gebruik je 2-puntsperspectief?', opts: ['Als je recht tegen een platte muur kijkt', 'Als je schuin op de hoek van een voorwerp of gebouw kijkt', 'Als je een cirkel tekent', 'Als er geen horizon is'], correct: 1 },
+              { q: 'Waar liggen de twee verdwijnpunten bij 2-puntsperspectief?', opts: ['Links en rechts op de horizonlijn', 'Eén op het doek en één in het publiek', 'Bovenaan en onderaan het papier', 'In de vier hoeken van de lijst'], correct: 0 },
+              { q: 'Wat kenmerkt het "vogelperspectief"?', opts: ['Een hele lage horizon waarbij alles reusachtig lijkt', 'Een hele hoge horizon waarbij je van boven op het tafereel neerrijkt', 'Een blik door een sleutelgat', 'Tekenen met een veer'], correct: 1 },
+              { q: 'Wat kenmerkt het "kikkerperspectief"?', opts: ['Kijken vanaf de grond omhoog, wat gebouwen machtig en hoog maakt', 'Kijken vanuit de wolken', 'Een schilderij dat groen geverfd is', 'Schilderen onder water'], correct: 0 },
+              { q: 'Welk werk van Gustave Caillebotte is beroemd om zijn 2-puntsperspectief in Parijs?', opts: ['Parijs op een Regenachtige Dag', 'De Sterrennacht', 'Het Laatste Avondmaal', 'Mona Lisa'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Welke lijnen blijven bij standaard 2-puntsperspectief VERTICAAL?', opts: ['De wijkende lengtelijnen', 'De opstaande hoeklijnen en muren van de gebouwen', 'De horizon', 'Geen enkele lijn'], correct: 1 },
+              { q: 'Wat gebeurt er met je horizon als je op een hoge berg gaat staan?', opts: ['De horizon stijgt mee met je ooghoogte', 'De horizon zakt naar de dalbodem', 'De horizon verdwijnt helemaal', 'De horizon wordt een cirkel'], correct: 0 },
+              { q: 'Waarom kijken mensen op schilderijen met kikkerperspectief er zo indrukwekkend uit?', opts: ['Omdat ze vanaf een laag punt worden getoond en boven de kijker uitsteken', 'Omdat ze kikkers vasthouden', 'Omdat ze groener zijn', 'Omdat de achtergrond vervaagt'], correct: 0 },
+              { q: 'Wat is de relatie tussen de verdwijnpunten en de horizon?', opts: ['Verdwijnpunten liggen ALTIJD op de horizonlijn', 'Verdwijnpunten staan los op het papier', 'Verdwijnpunten liggen onder het papier', 'Ze hebben niks met elkaar te maken'], correct: 0 },
+              { q: 'Hoe teken je een doos in 2-puntsperspectief?', opts: ['Je begint met de dichtstbijzijnde verticale hoeklijn en trekt lijnen naar beide verdwijnpunten', 'Je tekent een plat vierkant', 'Je tekent drie cirkels', 'Je kleurt de hoeken zwart'], correct: 0 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Atmosferisch & Plasticiteit',
+            theoryTitle: 'Lucht, Kleur en Vervaagde Diepte',
+            theoryText: `
+              <p>In grote landschappen werken strakke liniaallijnen niet meer. Kunstenaars gebruiken dan de werking van de atmosfeer.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Atmosferisch (Plastic) perspectief:</strong> Naarmate bergen of bomen verder weg staan, worden de contouren vervaagd en de kleuren lichter en blauwachtiger.</li>
+                <li><strong>Kleurperspectief:</strong> Warme kleuren voorin (rood/bruin), koele en blauwige tinten achterin.</li>
+                <li><strong>Sfumato:</strong> Het zacht vervagen van omtreklijnen in rook/mist (pionier: Leonardo da Vinci).</li>
+              </ul>
+            `,
+            artworkTitle: 'Mona Lisa (1503)',
+            artist: 'Leonardo da Vinci',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/500px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg',
+            artworkAnalysis: 'Achter het portret van de Mona Lisa schilderde Da Vinci een droomachtig berglandschap met **atmosferisch perspectief en sfumato**. De bergen in de verte vervagen in nevelig blauw-grijs.',
+            extraTheory: 'Onthoud: Atmosferisch perspectief maakt de achtergrond lichter, blauwer en minder scherp. Sfumato betekent het fluweelzacht laten overlopen van vormen.',
+            drawingTaskTitle: 'Atmosferische Bergen',
+            drawingTaskInstruction: 'Teken een berglandschap in lagen: donkere scherpe bergen voorin, en steeds lichtere, blauwere bergen verder achterin.',
+            quizA: [
+              { q: 'Wat veroorzaakt atmosferisch perspectief in de natuur?', opts: ['Rook van fabrieken', 'De stof- en vochtdeeltjes in de lucht die het licht verstrooien over grote afstanden', 'De vorm van de aarde', 'Slecht zicht van de schilder'], correct: 1 },
+              { q: 'Wat gebeurt er met kleuren van bergen die heel ver weg staan op een schilderij?', opts: ['Ze worden felgeel en heel scherp', 'Ze worden lichter, blauer en minder scherp afgetekend', 'Ze worden diepzwart', 'Ze veranderen in rood'], correct: 1 },
+              { q: 'Wat betekent het Italiaanse kunstbegrip "Sfumato"?', opts: ['Het schilderen met spuitbussen', 'Het fluweelzacht laten rook- of mistachtig in elkaar overlopen van vormen zonder harde contouren', 'Het maken van hele drukke patronen', 'Snel schetsen'], correct: 1 },
+              { q: 'Welke meester introduceerde de Sfumato-techniek in de Mona Lisa?', opts: ['Leonardo da Vinci', 'Piet Mondriaan', 'Vincent van Gogh', 'Rembrandt'], correct: 0 },
+              { q: 'Hoe pas je kleurperspectief toe in een landschap?', opts: ['Warme en donkere kleuren op de voorgrond, koele lichte blauwtinten in de achtergrond', 'Alles in exact dezelfde kleur groen verven', 'Achtergrond rood maken en voorgrond blauw', 'Alleen met zwart-wit werken'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom lijken de bergen op de achtergrond van de Mona Lisa blauw-grijs?', opts: ['Omdat Da Vinci alleen blauwe verf overhad', 'Vanwege de toepassing van atmosferisch perspectief', 'Omdat de bergen van ijs waren', 'Per ongeluk overgeschilderd'], correct: 1 },
+              { q: 'Wat gebeurt er met het detailniveau van objecten ver in de achtergrond?', opts: ['Details verdwijnen en contouren worden zacht', 'Elk blaadje wordt haarscherp zichtbaar', 'Details worden groter', 'Ze krijgen gouden randjes'], correct: 0 },
+              { q: 'Wat is het verschil tussen lijnperspectief en atmosferisch perspectief?', opts: ['Lijnperspectief werkt met wiskundige lijnen; atmosferisch met kleur, contrast en vervaging', 'Lijnperspectief is voor landschappen; atmosferisch voor dozen', 'Er is geen verschil', 'Lijnperspectief gebruikt waterverf'], correct: 0 },
+              { q: 'Welk gevoel roept een landschap met veel sfumato en nevel op?', opts: ['Poëtische droomachtigheid, geheimzinnigheid en grote diepte', 'Snelheid en verkeerschaos', 'Hardheid en geometrische strakheid', 'Geen enkel gevoel'], correct: 0 },
+              { q: 'Wat moet je doen met het contrast (licht-donker) in de verre achtergrond?', opts: ['Het contrast verlagen (minder verschil tussen licht en donker)', 'Het contrast extreem verhogen', 'Alles pikzwart maken', 'Met een zwarte viltstift omlijnen'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'licht',
+        title: 'Licht, Schaduw & Plasticiteit',
+        icon: 'fa-sun',
+        color: 'violet',
+        description: 'Chiaroscuro, kernschaduw, geworpen schaduw, plasticiteit.',
+        levels: [
+          {
+            id: 1,
+            title: 'Lichtval & Chiaroscuro',
+            theoryTitle: 'Vorm Krijgt Volume',
+            theoryText: `
+              <p>Zonder licht zien we geen vorm. Door <strong>licht en schaduw</strong> juist weer te geven, ontstaat <strong>plasticiteit</strong> (de illusie van 3D volume op papier):</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Eigen schaduw:</strong> De schaduw op het object zelf aan de kant die afgewend is van het licht.</li>
+                <li><strong>Kernschaduw:</strong> Het aller donkerste deel van de eigen schaduw.</li>
+                <li><strong>Geworpen schaduw:</strong> De schaduw die het object valt op de ondergrond of muur.</li>
+                <li><strong>Chiaroscuro (Licht-donker):</strong> Een sterk contrast tussen fel licht en diepe donkere schaduwen voor een dramatisch effect.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Nachtwacht (1642)',
+            artist: 'Rembrandt van Rijn',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/The_Night_Watch_-_HD.jpg/600px-The_Night_Watch_-_HD.jpg',
+            artworkAnalysis: 'Rembrandt is de meester van **Chiaroscuro**. Hij laat gericht licht vallen op belangrijke figuren (zoals het meisje in het geel en de kapitein), terwijl de achtergrond in diepe schaduw gehuld is.',
+            extraTheory: 'Lichtbron -> Belichte zijde -> Eigen schaduw -> Kernschaduw -> Geworpen schaduw op tafel. Chiaroscuro = sterk licht-donker contrast (Rembrandt / Caravaggio).',
+            drawingTaskTitle: '3D Bol met Schaduw',
+            drawingTaskInstruction: 'Teken een cirkel en maak er met zachte schaduwovergangen en een geworpen schaduw een ronde 3D bol van.',
+            quizA: [
+              { q: 'Wat verstaan we in de kunst onder "plasticiteit"?', opts: ['Het gebruik van plastic voorwerpen', 'De ruimtelijke illusie van tastbare 3D vorm en volume op een plat vlak', 'Het buigzaam maken van papier', 'Het schilderen met felle acrylverf'], correct: 1 },
+              { q: 'Wat is de "geworpen schaduw"?', opts: ['De schaduw die een object achterlaat op de ondergrond of muur', 'De donkere schaduw op het voorwerp zelf', 'De schaduw van de schilder op zijn doek', 'Een schaduw die met verf wordt gesmeten'], correct: 0 },
+              { q: 'Wat betekent het Italiaanse kunstbegrip "Chiaroscuro"?', opts: ['Het schilderen met snelle penselen', 'Een extreem sterk contrast tussen licht en donker', 'Schilderen in de open lucht', 'Het gebruik van pastelkleuren'], correct: 1 },
+              { q: 'Welke beroemde Hollandse meester stond bekend om zijn licht-donker effecten (Chiaroscuro)?', opts: ['Piet Mondriaan', 'Rembrandt van Rijn', 'Vincent van Gogh', 'M.C. Escher'], correct: 1 },
+              { q: 'Waar bevindt de "kernschaduw" zich op een verlichte bol?', opts: ['Precies op de plek waar het licht het felst valt', 'In het donkerste centrale gedeelte van de eigen schaduw op de bol', 'Op de tafel achter de bol', 'In het midden van de pupil'], correct: 1 }
+            ],
+            quizB: [
+              { q: 'Wat ontstaat er op het vlak van een object dat recht naar de lichtbron gekeerd staat?', opts: ['De kernschaduw', 'Het hooglicht / glimlicht zone', 'De geworpen schaduw', 'De omtreklijn'], correct: 1 },
+              { q: 'Hoe noem je schaduw op het object ZELF aan de kant waar geen licht komt?', opts: ['Eigen schaduw', 'Geworpen schaduw', 'Reflectielicht', 'Symmetrische schaduw'], correct: 0 },
+              { q: 'Welk type lichtval komt recht van VOREN op het onderwerp (weinig schaduw)?', opts: ['Tegenlicht', 'Meelicht', 'Zijlicht', 'Strijklicht'], correct: 1 },
+              { q: 'Wat gebeurt er bij "Tegenlicht"?', opts: ['De lichtbron bevindt zich achter het onderwerp, waardoor silhouetten ontstaan', 'De lichtbron staat achter de schilder', 'Het is volledig donker op het doek', 'Het licht schijnt van onderen'], correct: 0 },
+              { q: 'Waarom pasten barokschilders zoals Caravaggio en Rembrandt Chiaroscuro toe?', opts: ['Om het doek sneller droog te krijgen', 'Om spanning, drama en een theatraal gevoel op te roepen', 'Omdat donkere verf goedkoper was', 'Om geometrische vormen te verbergen'], correct: 1 }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Lichtrichting & Dramatiek',
+            theoryTitle: 'De Richting van de Lichtbron',
+            theoryText: `
+              <p>De hoek van waaruit het licht op je onderwerp valt bepaalt de sfeer en de vormweergave volledig.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Zijlicht:</strong> Licht valt vanaf de zijkant. Accentueert textuur, rimpels en driedimensionale vorm.</li>
+                <li><strong>Meelicht:</strong> Licht schijnt van achter de kijker recht op het onderwerp. Maakt het beeld erg plat.</li>
+                <li><strong>Tegenlicht:</strong> Licht schijnt recht naar de kijker toe achter het onderwerp. Suggereert mysterieuze silhouetten.</li>
+                <li><strong>Strijklicht:</strong> Licht scheert rakelings langs een oppervlak en maakt de kleinste oneffenheid zichtbaar.</li>
+              </ul>
+            `,
+            artworkTitle: 'De Roeping van Matteüs (1600)',
+            artist: 'Caravaggio',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Caravaggio_-_The_Calling_of_Saint_Matthew.jpg/600px-Caravaggio_-_The_Calling_of_Saint_Matthew.jpg',
+            artworkAnalysis: 'Caravaggio snijdt de ruimte door met een diagonaal **bundel scherp zijlicht** die vanuit het raam rechtsboven recht op het gezicht van Matteüs valt. Het licht symboliseert goddelijke roeping.',
+            extraTheory: 'Onthoud: Zijlicht benadrukt textuur en ruimtelijkheid. Tegenlicht maakt silhouetten. Caravaggio gebruikte gericht bundellicht als een theaterspot.',
+            drawingTaskTitle: 'Zijlicht op een Portret',
+            drawingTaskInstruction: 'Teken een gezicht of vorm waarbij de ene helft fel verlicht is door zijlicht en de andere helft in diepe schaduw ligt.',
+            quizA: [
+              { q: 'Wat is het kenmerkende effect van zijlicht op een voorwerp?', opts: ['Het maakt het voorwerp helemaal plat', 'Het benadrukt de textuur en de 3D ruimtelijkheid door duidelijke schaduwen aan één zijde', 'Het wist alle kleuren uit', 'Het creëert een silhouet'], correct: 1 },
+              { q: 'Welke barokpionier stond bekend om zijn extreme spotlights in donkere ruimtes (tenebrisme)?', opts: ['Caravaggio', 'Claude Monet', 'Piet Mondriaan', 'Andy Warhol'], correct: 0 },
+              { q: 'Wat gebeurt er als een lichtbron vlak boven de grond rakelings langs een muur schijnt (strijklicht)?', opts: ['Elk klein hobbeltje en textuurverschil wordt uitvergroot zichtbaar', 'De muur wordt onzichtbaar', 'Er ontstaan cirkels op het doek', 'Het licht dooft direct'], correct: 0 },
+              { q: 'Welk type lichtval creëert een donker silhouet met een lichtgevend randje?', opts: ['Meelicht', 'Tegenlicht', 'Toplicht', 'Kaarslicht'], correct: 1 },
+              { q: 'Waarom is meelicht (licht achter de fotograaf/schilder) vaak minder spannend voor 3D vorm?', opts: ['Omdat er nauwelijks zichtbare schaduwen op het voorwerp vallen, wat de vorm plat maakt', 'Omdat het verf aantast', 'Omdat het altijd rood is', 'Omdat de schilder er blind van wordt'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Wat vertelt de geworpen schaduw op de grond over de lichtbron?', opts: ['De richting en de hoogte van de lichtbron', 'Het gewicht van het object', 'De prijs van het kunstwerk', 'De leeftijd van de kunstenaar'], correct: 0 },
+              { q: 'Hoe verandert een geworpen schaduw als de zon lager aan de hemel staat?', opts: ['De schaduw wordt erg lang gerekt', 'De schaduw krimpt tot een klein stipje', 'De schaduw verdwijnt helemaal', 'De schaduw wordt felgeel'], correct: 0 },
+              { q: 'Wat is het effect van een zacht diffuus licht (bijv. op een bewolkte dag)?', opts: ['Harde scherpe zwarte schaduwen', 'Zachte, vloeiende schaduwovergangen zonder harde randen', 'Geen enkel licht op aarde', 'Alle voorwerpen worden rood'], correct: 1 },
+              { q: 'Waarom gebruikte Caravaggio zo graag een schuine lichtbundel van boven?', opts: ['Om de blik van de kijker direct naar het dramatische climaxmoment te sturen', 'Omdat het raam kapot was', 'Om verf te besparen', 'Omdat hij alleen overdag schilderde'], correct: 0 },
+              { q: 'Wat is het verschil tussen hard licht en zacht licht?', opts: ['Hard licht geeft scherpe schaduwranden; zacht licht geeft geleidelijke schaduwovergangen', 'Hard licht is zwaar in gewicht', 'Zacht licht droogt niet', 'Er is geen verschil'], correct: 0 }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Reflectie, Glans & Stofuitdrukking',
+            theoryTitle: 'Glanspunten en Materiaal',
+            theoryText: `
+              <p>Om te laten zien wát voor materiaal iets is (glas, zilver, fluweel, fruit), kijkt een kunstenaar naar de lichtreflectie.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><strong>Hooglicht / Glimlicht:</strong> Een spierwit, fel accentje waar het licht direct weerkaatst op een glad of nat oppervlak.</li>
+                <li><strong>Reflectielicht:</strong> Licht dat via de tafel terugkaatst in de schaduwzijde van een voorwerp.</li>
+                <li><strong>Stofuitdrukking:</strong> De kunst om de textuur van een specifiek materiaal (zoals een schillende citroen of roemer glas) overtuigend na te maken.</li>
+              </ul>
+            `,
+            artworkTitle: 'Stilleven met Bokaal en Citroen (1635)',
+            artist: 'Pieter Claesz',
+            artworkImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Pieter_Claesz._-_Still_Life_with_a_Skull_and_a_Writing_Quill_-_Google_Art_Project.jpg/600px-Pieter_Claesz._-_Still_Life_with_a_Skull_and_a_Writing_Quill_-_Google_Art_Project.jpg',
+            artworkAnalysis: 'Pieter Claesz was de absolute meester van **stofuitdrukking**. Zie hoe het licht glimt op het glas van de bokaal (hooglicht) en hoe de doffe matheid van de citroenschil exact contrasteert met het glanzende zilver.',
+            extraTheory: 'Onthoud: Hooglicht = spierwitte glimstip op glad materiaal. Reflectielicht = terugkaatsend licht in de schaduw. Stofuitdrukking = materiaal echt laten lijken.',
+            drawingTaskTitle: 'Glimmend & Mat Stilleven',
+            drawingTaskInstruction: 'Teken een glanzend voorwerp (bijv. een glazen fles of metalen lepel) mét een fel wit glimlicht en een mat object ernaast.',
+            quizA: [
+              { q: 'Wat is een "hooglicht" of "glimlicht" in een tekening?', opts: ['Een lamp die boven het doek hangt', 'De felste, spierwitte lichtreflectie op een glad of nat oppervlak', 'Een gele achtergrond', 'Een speciale fluorescerende verf'], correct: 1 },
+              { q: 'Wat verstaan we onder "reflectielicht"?', opts: ['Licht dat via de omgeving/ondergrond terugkaatst in de schaduwkant van het voorwerp', 'Licht van een spiegel in de kamer', 'Licht dat uit je ogen straalt', 'De zon achter de wolken'], correct: 0 },
+              { q: 'Welke Hollandse stillevenschilder blonk uit in de stofuitdrukking van glas, zilver en citroenen?', opts: ['Pieter Claesz', 'Piet Mondriaan', 'Karel Appel', 'Vincent van Gogh'], correct: 0 },
+              { q: 'Hoe geef je het verschil aan tussen een mat houten blok en een glanzende metalen kogel?', opts: ['Hout heeft geleidelijke schaduwen; metaal heeft harde hooglichten en weerspiegelingen', 'Hout maak je blauw en metaal rood', 'Door er met water overheen te gaan', 'Geen verschil'], correct: 0 },
+              { q: 'Waarom is het belangrijk om het spierwitte papier open te laten voor een hooglicht?', opts: ['Omdat wit papier het allerhoogste lichtaccent vormt in de tekening', 'Omdat gummen verboden is', 'Om verf te besparen', 'Dat maakt niks uit'], correct: 0 }
+            ],
+            quizB: [
+              { q: 'Waarom lijkt de schaduwzijde van een bol op een witte tafel onderaan toch heel lichtjes op te lichten?', opts: ['Vanwege het reflectielicht dat via het witte tafelblad in de schaduw kaatst', 'Omdat de bol van glas is', 'Omdat de bol stroom geeft', 'Dat is een gezichtsbedrog'], correct: 0 },
+              { q: 'Wat is het geheim van het realistisch tekenen van transparant glas?', opts: ['Alleen de donkere brekingsranden en felwitte glimstippen tekenen; de rest transparant laten', 'Het hele glas pikzwart inkleuren', 'Geen lijnen gebruiken', 'Het papier natmaken'], correct: 0 },
+              { q: 'Wat is "stofuitdrukking"?', opts: ['Het afstoffen van je kunstwerk', 'Het zo overtuigend tekenen dat je de textuur en de aard van het materiaal voelt', 'Het opblazen van stof op doek', 'Een schilderij over kleding'], correct: 1 },
+              { q: 'Waar bevindt het hooglicht zich ten opzichte van de lichtbron?', opts: ['Op het punt waar het licht het meest rechtstreeks op het oppervlak stuit', 'In het donkerste deel van de schaduw', 'Op de achtergrond van het doek', 'Aan de onderkant van de tafel'], correct: 0 },
+              { q: 'Wat gebeurt er als je het hooglicht op een glazen vaas vergeet te tekenen?', opts: ['De vaas verliest zijn glans en lijkt dof of mat', 'De vaas verandert in goud', 'De vaas verdwijnt', 'Het schilderij wordt driedimensionaal'], correct: 0 }
+            ]
+          }
+        ]
+      }
+    ];
+
+    /* ==========================================================================
+       2. STATE MANAGEMENT & LOCAL STORAGE
+       ========================================================================== */
+    let state = {
+      activeSubjectId: null,
+      activeLevelIndex: 0,
+      activeStep: 1, // 1: Kennis, 2: Tekenen, 3: Quiz
+      quizAttempt: 0, // 0 = Pool A, >0 = Pool B
+      unlockedLevels: {}, // e.g. { 'lijn': 1, 'compositie': 1 }
+      xp: 0,
+      
+      // Canvas tool state
+      tool: 'pen',
+      color: '#1e293b',
+      brushSize: 3,
+      hasDrawn: false
+    };
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('kunstacademie_app_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed };
+        }
+      } catch (e) {
+        console.error("Failed to load state", e);
+      }
+      // Ensure default unlocked level 1 for each subject
+      SUBJECTS.forEach(s => {
+        if (!state.unlockedLevels[s.id]) {
+          state.unlockedLevels[s.id] = 1;
+        }
+      });
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('kunstacademie_app_state', JSON.stringify(state));
+      } catch (e) {
+        console.error("Failed to save state", e);
+      }
+    }
+
+    function confirmReset() {
+      if (confirm("Weet je zeker dat je alle behaalde niveaus en XP wilt resetten?")) {
+        localStorage.removeItem('kunstacademie_app_state');
+        location.reload();
+      }
+    }
+
+    /* ==========================================================================
+       3. NAVIGATION & DASHBOARD RENDERER
+       ========================================================================== */
+    function renderDashboard() {
+      document.getElementById('dashboardView').classList.remove('hidden');
+      document.getElementById('workspaceView').classList.add('hidden');
+      document.getElementById('navHomeBtn').classList.add('hidden');
+      document.getElementById('totalXpDisplay').innerText = `${state.xp} XP`;
+
+      const grid = document.getElementById('subjectGrid');
+      grid.innerHTML = '';
+
+      SUBJECTS.forEach(sub => {
+        const unlockedLvl = state.unlockedLevels[sub.id] || 1;
+        const totalLvls = sub.levels.length;
+
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-2xl border border-slate-200 p-6 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group";
+        card.onclick = () => openSubject(sub.id);
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors flex items-center justify-center text-xl shadow-xs">
+                <i class="fa-solid ${sub.icon}"></i>
+              </div>
+              <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full border border-slate-200">
+                Niveau ${unlockedLvl} / ${totalLvls}
+              </span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-lg mb-1 group-hover:text-indigo-600 transition-colors">${sub.title}</h3>
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">${sub.description}</p>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="font-bold text-indigo-600 flex items-center gap-1">
+              <span>Starten</span>
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </span>
+            <div class="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${(unlockedLvl / totalLvls) * 100}%"></div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function showDashboard() {
+      state.activeSubjectId = null;
+      renderDashboard();
+    }
+
+    function openSubject(subjectId) {
+      state.activeSubjectId = subjectId;
+      state.activeLevelIndex = 0; // Default to level 1
+      state.activeStep = 1;
+      state.quizAttempt = 0;
+
+      document.getElementById('dashboardView').classList.add('hidden');
+      document.getElementById('workspaceView').classList.remove('hidden');
+      document.getElementById('navHomeBtn').classList.remove('hidden');
+
+      renderWorkspace();
+    }
+
+    /* ==========================================================================
+       4. WORKSPACE & STEP RENDERER
+       ========================================================================== */
+    function renderWorkspace() {
+      const subject = SUBJECTS.find(s => s.id === state.activeSubjectId);
+      if (!subject) return;
+
+      const level = subject.levels[state.activeLevelIndex];
+      const highestUnlocked = state.unlockedLevels[subject.id] || 1;
+
+      // Update Header Badges & Titles
+      document.getElementById('activeSubjectTitle').innerText = subject.title;
+      document.getElementById('activeLevelTitle').innerText = `Niveau ${level.id}: ${level.title}`;
+      document.getElementById('subjectIconBadge').innerHTML = `<i class="fa-solid ${subject.icon}"></i>`;
+
+      // Render Level Selector Pills (1, 2, 3)
+      const levelContainer = document.getElementById('levelSelectorContainer');
+      levelContainer.innerHTML = '';
+      subject.levels.forEach((lvl, idx) => {
+        const isUnlocked = lvl.id <= highestUnlocked;
+        const isActive = idx === state.activeLevelIndex;
+
+        const btn = document.createElement('button');
+        btn.disabled = !isUnlocked;
+        btn.onclick = () => selectLevel(idx);
+        
+        let style = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-1.5 ";
+        if (isActive) {
+          style += "bg-indigo-600 text-white shadow-xs ";
+        } else if (isUnlocked) {
+          style += "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 ";
+        } else {
+          style += "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-60 ";
+        }
+
+        btn.className = style;
+        btn.innerHTML = `
+          <span>Nvl ${lvl.id}</span>
+          ${!isUnlocked ? '<i class="fa-solid fa-lock text-[10px]"></i>' : ''}
+        `;
+        levelContainer.appendChild(btn);
+      });
+
+      // Render Step 1 Content (Theory & Artwork)
+      document.getElementById('theoryTitle').innerText = level.theoryTitle;
+      document.getElementById('theoryText').innerHTML = level.theoryText;
+
+      const artContainer = document.getElementById('artworkContainer');
+      artContainer.innerHTML = `
+        <div class="w-full md:w-52 h-40 bg-slate-200 rounded-lg overflow-hidden shrink-0 border border-slate-300">
+          <img src="${level.artworkImg}" alt="${level.artworkTitle}" 
+               onerror="this.onerror=null; this.src='https://placehold.co/600x400/1e293b/ffffff?text=Kunstwerk+Voorbeeld';"
+               class="w-full h-full object-cover">
+        </div>
+        <div class="space-y-1 text-xs">
+          <h5 class="font-bold text-slate-900 text-sm">"${level.artworkTitle}"</h5>
+          <p class="text-indigo-600 font-semibold">${level.artist}</p>
+          <p class="text-slate-600 leading-relaxed pt-1">${level.artworkAnalysis}</p>
+        </div>
+      `;
+
+      document.getElementById('extraTheoryText').innerText = level.extraTheory;
+      if (state.quizAttempt > 0) {
+        document.getElementById('extraTheoryBox').classList.remove('hidden');
+      } else {
+        document.getElementById('extraTheoryBox').classList.add('hidden');
+      }
+
+      // Render Step 2 Content (Drawing Task)
+      document.getElementById('drawingTaskTitle').innerText = level.drawingTaskTitle;
+      document.getElementById('drawingTaskInstruction').innerText = level.drawingTaskInstruction;
+
+      // Render Step 3 Content (Quiz)
+      document.getElementById('quizAttemptBadge').innerText = `Poging ${state.quizAttempt + 1}`;
+      renderQuizQuestions(level);
+
+      // Reset Canvas whenever level/subject switches
+      initCanvas();
+      clearCanvas();
+
+      // Show current step tab
+      switchStep(state.activeStep);
+    }
+
+    function selectLevel(levelIdx) {
+      state.activeLevelIndex = levelIdx;
+      state.activeStep = 1;
+      state.quizAttempt = 0;
+      renderWorkspace();
+    }
+
+    function switchStep(stepNum) {
+      state.activeStep = stepNum;
+
+      // Update Tab Styles
+      for (let i = 1; i <= 3; i++) {
+        const tab = document.getElementById(`stepTab${i}`);
+        const content = document.getElementById(`stepContent${i}`);
+
+        if (i === stepNum) {
+          tab.className = "px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all bg-white text-indigo-600 shadow-xs border border-slate-200";
+          content.classList.remove('hidden');
+        } else {
+          tab.className = "px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all text-slate-600 hover:text-slate-900 hover:bg-white/50";
+          content.classList.add('hidden');
+        }
+      }
+
+      if (stepNum === 2) {
+        setTimeout(resizeCanvas, 50); // Ensure canvas fits parent container
+      }
+    }
+
+    /* ==========================================================================
+       5. DRAWING CANVAS ENGINE & TOUCH SCROLL PREVENTION
+       ========================================================================== */
+    let canvas, ctx;
+    let isDrawing = false;
+
+    function initCanvas() {
+      canvas = document.getElementById('drawingCanvas');
+      ctx = canvas.getContext('2d');
+
+      // Unbind previous listeners
+      canvas.onpointerdown = null;
+      canvas.onpointermove = null;
+      canvas.onpointerup = null;
+
+      // Pointer/Touch events with passive: false to prevent scrolling
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+      canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+
+      // Mouse events
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', drawStroke);
+      canvas.addEventListener('mouseup', stopDraw);
+      canvas.addEventListener('mouseleave', stopDraw);
+
+      resizeCanvas();
+    }
+
+    function handleTouchStart(e) {
+      e.preventDefault(); // CRITICAL: Prevents page scrolling when drawing on canvas
+      if (e.touches && e.touches[0]) {
+        startDraw(e.touches[0]);
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault(); // CRITICAL: Prevents page scrolling when drawing on canvas
+      if (e.touches && e.touches[0]) {
+        drawStroke(e.touches[0]);
+      }
+    }
+
+    function handleTouchEnd(e) {
+      e.preventDefault();
+      stopDraw();
+    }
+
+    function resizeCanvas() {
+      if (!canvas) return;
+      const parent = canvas.parentElement;
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+
+      // Fill clean white paper background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+      const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      state.hasDrawn = true;
+      const pos = getCanvasPos(e);
+
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (state.tool === 'eraser') {
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = state.brushSize * 4;
+      } else if (state.tool === 'brush') {
+        ctx.strokeStyle = state.color;
+        ctx.lineWidth = state.brushSize * 2.5;
+      } else {
+        ctx.strokeStyle = state.color;
+        ctx.lineWidth = state.brushSize;
+      }
+    }
+
+    function drawStroke(e) {
+      if (!isDrawing) return;
+      const pos = getCanvasPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDraw() {
+      if (isDrawing) {
+        isDrawing = false;
+        ctx.closePath();
+      }
+    }
+
+    function clearCanvas() {
+      if (!canvas) return;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      state.hasDrawn = false;
+    }
+
+    function setTool(toolName) {
+      state.tool = toolName;
+      ['pen', 'brush', 'eraser'].forEach(t => {
+        const btn = document.getElementById(`tool-${t}`);
+        if (t === toolName) {
+          btn.className = "px-3 py-1.5 rounded-md text-xs font-bold bg-white text-indigo-600 shadow-xs transition-all";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition-all";
+        }
+      });
+    }
+
+    function setColor(hex) {
+      state.color = hex;
+      document.getElementById('colorPicker').value = hex;
+    }
+
+    function verifyAndSubmitDrawing() {
+      if (!state.hasDrawn) {
+        alert("Maak a.u.b. eerst een tekening op het doek voor het thema van dit niveau voordat je doorgaat naar de quiz!");
+        return;
+      }
+
+      // Proceed to Step 3: Quiz
+      switchStep(3);
+    }
+
+    /* ==========================================================================
+       6. QUIZ RENDERER & GRADING
+       ========================================================================== */
+    function renderQuizQuestions(level) {
+      const form = document.getElementById('quizForm');
+      form.innerHTML = '';
+
+      // Choose question pool based on attempt (0 = Pool A, >0 = Pool B)
+      const questions = state.quizAttempt === 0 ? level.quizA : level.quizB;
+
+      questions.forEach((q, qIdx) => {
+        const qCard = document.createElement('div');
+        qCard.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 text-xs";
+
+        let optionsHtml = '';
+        q.opts.forEach((opt, oIdx) => {
+          optionsHtml += `
+            <label class="flex items-center space-x-3 p-2.5 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-indigo-300 transition-colors">
+              <input type="radio" name="q_${qIdx}" value="${oIdx}" class="accent-indigo-600 w-4 h-4" required>
+              <span class="text-slate-700 font-medium">${opt}</span>
+            </label>
+          `;
+        });
+
+        qCard.innerHTML = `
+          <p class="font-bold text-slate-900 text-sm">${qIdx + 1}. ${q.q}</p>
+          <div class="space-y-1.5">
+            ${optionsHtml}
+          </div>
+        `;
+        form.appendChild(qCard);
+      });
+    }
+
+    function evaluateQuiz(e) {
+      e.preventDefault();
+
+      const subject = SUBJECTS.find(s => s.id === state.activeSubjectId);
+      const level = subject.levels[state.activeLevelIndex];
+      const questions = state.quizAttempt === 0 ? level.quizA : level.quizB;
+
+      let score = 0;
+      let allAnswered = true;
+
+      questions.forEach((q, qIdx) => {
+        const selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
+        if (!selected) {
+          allAnswered = false;
+        } else if (parseInt(selected.value) === q.correct) {
+          score++;
+        }
+      });
+
+      if (!allAnswered) {
+        alert("Beantwoord a.u.b. alle 5 de vragen voordat je de quiz inlevert!");
+        return;
+      }
+
+      const passed = score >= 4; // Requires at least 4 out of 5 correct
+
+      showResultModal(score, passed, subject, level);
+    }
+
+    function showResultModal(score, passed, subject, level) {
+      const modal = document.getElementById('resultModal');
+      const icon = document.getElementById('resultModalIcon');
+      const title = document.getElementById('resultModalTitle');
+      const scoreDisplay = document.getElementById('quizScoreDisplay');
+      const feedback = document.getElementById('quizFeedbackMessage');
+      const actions = document.getElementById('resultModalActions');
+
+      scoreDisplay.innerText = `${score} / 5`;
+
+      if (passed) {
+        icon.className = "w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner";
+        icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+        title.innerText = "Gefeliciteerd! Geslaagd!";
+        feedback.innerText = "Je hebt voldoende kennis getoond. Het volgende niveau is ontgrendeld!";
+
+        // Unlock next level if applicable
+        const currentUnlocked = state.unlockedLevels[subject.id] || 1;
+        if (level.id === currentUnlocked && level.id < subject.levels.length) {
+          state.unlockedLevels[subject.id] = level.id + 1;
+        }
+
+        state.xp += 100;
+        saveState();
+
+        actions.innerHTML = `
+          <button onclick="closeModalAndNext()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-200 transition-colors">
+            Volgende Niveau
+          </button>
+        `;
+      } else {
+        icon.className = "w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner";
+        icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        title.innerText = "Helaas, Niet Gehaald";
+        feedback.innerText = "Je hebt minimaal 4 van de 5 goed nodig. Bekijk de extra uitleg en probeer het opnieuw met een nieuwe set vragen!";
+
+        // Increment attempt count (triggers Pool B and Extra Theory display)
+        state.quizAttempt += 1;
+        saveState();
+
+        actions.innerHTML = `
+          <button onclick="closeModalAndReviewTheory()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md shadow-amber-200 transition-colors">
+            Bekijk Extra Uitleg & Nieuwe Quiz
+          </button>
+        `;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeModalAndNext() {
+      document.getElementById('resultModal').classList.add('hidden');
+      const subject = SUBJECTS.find(s => s.id === state.activeSubjectId);
+      if (state.activeLevelIndex < subject.levels.length - 1) {
+        selectLevel(state.activeLevelIndex + 1);
+      } else {
+        showDashboard();
+      }
+    }
+
+    function closeModalAndReviewTheory() {
+      document.getElementById('resultModal').classList.add('hidden');
+      renderWorkspace();
+      switchStep(1); // Return to theory step with Extra Theory visible
+    }
+
+    /* ==========================================================================
+       7. INITIALIZATION ON WINDOW LOAD
+       ========================================================================== */
+    window.onload = function() {
+      loadState();
+      
+      // Setup color and brush size inputs
+      document.getElementById('colorPicker').addEventListener('input', (e) => setColor(e.target.value));
+      document.getElementById('brushSize').addEventListener('input', (e) => state.brushSize = parseInt(e.target.value));
+
+      renderDashboard();
+    };
+  </script>
+</body>
+</html>
