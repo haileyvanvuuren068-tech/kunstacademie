@@ -1,1395 +1,1313 @@
 <!DOCTYPE html>
-<html lang="nl" class="h-full bg-slate-100 text-slate-800">
+<html lang="nl" class="scroll-smooth h-full">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kunst Academie</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Google Fonts Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              200: '#bbf7d0',
-              500: '#22c55e',
-              600: '#16a34a',
-              700: '#15803d',
-            }
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kunst Academie & Kunst Avontuur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
         }
-      }
-    };
-  </script>
+
+        /* Bos Achtergrond voor het Spel */
+        .forest-arena {
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(20, 83, 45, 0.8)),
+                        radial-gradient(circle at 50% 20%, rgba(34, 197, 94, 0.25), transparent 70%),
+                        linear-gradient(to bottom, #0f172a, #14532d, #064e3b);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Bomen SVG Siliconen Effect op Achtergrond */
+        .forest-trees {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 400' preserveAspectRatio='none'%3E%3Cpath fill='%23064e3b' fill-opacity='0.5' d='M0 400 L0 250 L40 300 L80 200 L120 280 L160 180 L200 320 L240 220 L280 300 L320 150 L360 270 L400 200 L440 310 L480 190 L520 290 L560 160 L600 300 L640 210 L680 320 L720 170 L760 280 L800 220 L840 330 L880 180 L920 290 L960 160 L1000 310 L1040 200 L1080 300 L1120 180 L1160 270 L1200 220 L1200 400 Z'/%3E%3Cpath fill='%23022c22' fill-opacity='0.8' d='M0 400 L0 290 L50 330 L100 240 L150 310 L200 210 L250 340 L300 250 L350 320 L400 180 L450 300 L500 220 L550 330 L600 200 L650 320 L700 230 L750 340 L800 210 L850 310 L900 220 L950 320 L1000 200 L1050 330 L1100 240 L1150 310 L1200 260 L1200 400 Z'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        .nav-tab.active {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Custom Scrollbar voor Combat Log */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        /* Animatie effecten voor gevecht */
+        @keyframes hitShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .animate-hit {
+            animation: hitShake 0.4s ease-in-out;
+        }
+
+        .shield-glow {
+            box-shadow: 0 0 25px 8px rgba(59, 130, 246, 0.6);
+            border-color: #60a5fa !important;
+        }
+    </style>
 </head>
-<body class="h-full flex flex-col font-sans bg-slate-100 text-slate-800 antialiased selection:bg-brand-100 selection:text-brand-700">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased">
 
-  <!-- Top Navigation Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3 cursor-pointer" onclick="showDashboard()">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-teal-500 text-white flex items-center justify-center font-black text-xl shadow-md">
-          <i class="fa-solid fa-palette"></i>
-        </div>
-        <div>
-          <h1 class="font-black text-xl tracking-tight text-slate-900 leading-none">Kunst Academie</h1>
-          <p class="text-xs text-slate-500 font-medium">Interactieve Kunst- & Tekengame</p>
-        </div>
-      </div>
-
-      <!-- Account Switcher Button -->
-      <button onclick="toggleAccountModal()" class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition">
-        <div id="header-avatar" class="w-7 h-7 rounded-lg bg-brand-600 text-white flex items-center justify-center font-bold text-xs">
-          K
-        </div>
-        <span id="header-username" class="font-bold text-xs sm:text-sm text-slate-700">Kunstenaar</span>
-        <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
-      </button>
-    </div>
-  </header>
-
-  <!-- Main Application Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-
-    <!-- VIEW 1: Dashboard / Subject Overview (Grid 3x2) -->
-    <div id="view-dashboard" class="space-y-6">
-      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-        <h2 class="text-2xl font-black text-slate-900">Kies een Kunstvak</h2>
-        <p class="text-slate-600 text-sm mt-1">Kies een vak om te beginnen. Elk vak heeft 3 niveaus met theorie, een tekenopdracht en een eindquiz!</p>
-      </div>
-
-      <!-- 3x2 Grid for the 6 Core Beeldaspecten -->
-      <div id="subjects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Subjects rendered dynamically via JS -->
-      </div>
-    </div>
-
-    <!-- VIEW 2: Subject Level View (Theory, Drawing, Quiz Tabs) -->
-    <div id="view-level" class="hidden space-y-6">
-      <!-- Breadcrumb & Navigation Header -->
-      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <button onclick="showDashboard()" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1 mb-1">
-            <i class="fa-solid fa-arrow-left"></i> Terug naar Vakkenoverzicht
-          </button>
-          <h2 id="level-subject-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Vak Naam</h2>
-          <h3 id="level-title" class="text-xl font-black text-slate-900">Niveau 1: Titel</h3>
-        </div>
-
-        <!-- Navigation Tabs -->
-        <div class="flex items-center gap-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-          <button id="tab-btn-kennis" onclick="switchTab('kennis')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-white text-brand-600 shadow-sm border border-slate-200">
-            <i class="fa-solid fa-book-open"></i> 1. Kennis
-          </button>
-          <button id="tab-btn-tekenen" onclick="switchTab('tekenen')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-paintbrush"></i> 2. Tekenen
-          </button>
-          <button id="tab-btn-quiz" onclick="switchTab('quiz')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-circle-question"></i> 3. Quiz
-          </button>
-        </div>
-      </div>
-
-      <!-- TAB 1: KENNIS & THEORIE -->
-      <div id="tab-content-kennis" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Theory Text Column -->
-        <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <i class="fa-solid fa-graduation-cap text-brand-600"></i> Theorie & Voorkennis
-            </h3>
-            <div id="theory-text-container" class="prose prose-slate max-w-none text-sm leading-relaxed space-y-3">
-              <!-- Dynamically populated theory -->
-            </div>
-          </div>
-
-          <!-- Hidden Extra Explanation Container (Unlocked when Quiz fails) -->
-          <div id="extra-explanation-box" class="hidden bg-amber-50 rounded-2xl p-6 border border-amber-200 space-y-3">
-            <h4 class="font-bold text-amber-900 text-sm flex items-center gap-2">
-              <i class="fa-solid fa-lightbulb text-amber-600"></i> Extra Uitleg voor Herkansing
-            </h4>
-            <p id="extra-explanation-text" class="text-xs sm:text-sm text-amber-800 leading-relaxed"></p>
-          </div>
-        </div>
-
-        <!-- Artwork Column -->
-        <div class="space-y-6">
-          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <h3 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <i class="fa-solid fa-image text-brand-600"></i> Kunstwerk in de Praktijk
-            </h3>
-            <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-100 aspect-video relative">
-              <img id="artwork-img" src="" alt="Kunstwerk" class="w-full h-full object-cover" onerror="handleImageError(this)" />
-            </div>
-            <div>
-              <h4 id="artwork-title" class="font-extrabold text-slate-900 text-base">Titel Kunstwerk</h4>
-              <p id="artwork-artist" class="text-xs text-slate-500 font-semibold mb-2">Kunstenaar</p>
-              <p id="artwork-analysis" class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TAB 2: TEKENOPDRACHT -->
-      <div id="tab-content-tekenen" class="hidden space-y-6">
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-            <div>
-              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-pen-ruler text-brand-600"></i> Tekenopdracht
-              </h3>
-              <p id="drawing-prompt-text" class="text-sm text-slate-600 mt-1"></p>
-            </div>
-            
-            <button onclick="submitDrawing()" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition flex items-center gap-2">
-              <i class="fa-solid fa-check"></i> Inleveren & Naar Quiz
-            </button>
-          </div>
-
-          <!-- Drawing Canvas Toolbar -->
-          <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <!-- Tool Switcher -->
-            <div class="flex items-center gap-2">
-              <button id="tool-brush" onclick="setTool('brush')" class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-brand-600 text-white border-brand-600">
-                <i class="fa-solid fa-paint-brush"></i> Pensueel
-              </button>
-              <button id="tool-eraser" onclick="setTool('eraser')" class="flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100">
-                <i class="fa-solid fa-eraser"></i> Gom
-              </button>
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+                    🎨
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">Kunst Academie</span>
+                    <span class="block text-xs text-slate-400 font-medium">Interactief Leer- & Spelplatform</span>
+                </div>
             </div>
 
-            <!-- Color Palette -->
-            <div class="flex items-center gap-1.5">
-              <button onclick="setColor('#000000')" class="w-7 h-7 rounded-full bg-black border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
-              <button onclick="setColor('#ef4444')" class="w-7 h-7 rounded-full bg-red-500 border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
-              <button onclick="setColor('#3b82f6')" class="w-7 h-7 rounded-full bg-blue-500 border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
-              <button onclick="setColor('#eab308')" class="w-7 h-7 rounded-full bg-yellow-500 border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
-              <button onclick="setColor('#22c55e')" class="w-7 h-7 rounded-full bg-green-500 border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
-              <button onclick="setColor('#a855f7')" class="w-7 h-7 rounded-full bg-purple-500 border-2 border-white shadow-sm ring-1 ring-slate-300"></button>
+            <!-- Tabs: Leren & Spel -->
+            <div class="flex items-center space-x-2 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60">
+                <button onclick="switchTab('leren')" id="tab-btn-leren" class="nav-tab active px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2">
+                    <span>📖 Leren</span>
+                </button>
+                <button onclick="switchTab('spel')" id="tab-btn-spel" class="nav-tab text-slate-300 hover:text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2">
+                    <span>⚔️ Spel</span>
+                    <span id="nav-points-badge" class="bg-amber-400 text-slate-900 text-xs px-2.5 py-0.5 rounded-full font-bold shadow-sm">0 pt</span>
+                </button>
             </div>
-
-            <!-- Brush Size & Clear -->
-            <div class="flex items-center gap-3">
-              <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
-                <span>Grootte:</span>
-                <input type="range" min="2" max="30" value="5" oninput="setBrushSize(this.value)" class="w-20 accent-brand-600" />
-                <span id="brush-size-val">5px</span>
-              </div>
-              <button onclick="clearCanvas()" class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-bold text-xs hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition">
-                <i class="fa-solid fa-trash-can"></i> Wis Doek
-              </button>
-            </div>
-          </div>
-
-          <!-- Drawing Canvas Container -->
-          <div class="w-full bg-white rounded-xl border border-slate-200 overflow-hidden shadow-inner flex items-center justify-center p-2 relative touch-none">
-            <canvas id="drawing-canvas" class="bg-white rounded border border-slate-100 cursor-crosshair touch-none"></canvas>
-          </div>
         </div>
-      </div>
+    </header>
 
-      <!-- TAB 3: QUIZ (5 QUESTIONS) -->
-      <div id="tab-content-quiz" class="hidden space-y-6">
-        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <i class="fa-solid fa-circle-question text-brand-600"></i> Kennischeck
-              </h3>
-              <p class="text-xs text-slate-500 mt-0.5">Beantwoord alle 5 de vragen om dit niveau te behalen. Je hebt minstens 4 goede antwoorden nodig.</p>
-            </div>
-            <span id="quiz-pool-badge" class="px-3 py-1 rounded-full text-xs font-black bg-brand-50 text-brand-700 border border-brand-200">
-              Vragenset A
-            </span>
-          </div>
+    <!-- Notification Message Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-          <!-- Questions Container -->
-          <div id="quiz-questions-container" class="space-y-6">
-            <!-- Dynamically rendered quiz questions -->
-          </div>
-
-          <!-- Result Feedback Box -->
-          <div id="quiz-result-box" class="hidden"></div>
-
-          <!-- Submit Button -->
-          <div class="flex justify-end pt-4 border-t border-slate-100">
-            <button id="btn-submit-quiz" onclick="checkQuiz()" class="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition flex items-center gap-2">
-              <i class="fa-solid fa-paper-plane"></i> Controleer Antwoorden
-            </button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <!-- Account Management Modal -->
-  <div id="account-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 border border-slate-200">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-slate-900 text-lg">Kunstenaars Accounts</h3>
-        <button onclick="toggleAccountModal()" class="text-slate-400 hover:text-slate-600 transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Existing Accounts List -->
-      <div class="space-y-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Kies een account</h4>
-        <div id="account-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
-          <!-- Dynamically populated accounts -->
-        </div>
-      </div>
-
-      <!-- Create New Account -->
-      <div class="space-y-3 pt-3 border-t border-slate-100">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nieuw Account Aanmaken</h4>
-        <div class="flex gap-2">
-          <input type="text" id="new-account-name" placeholder="Naam Kunstenaar..." class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-          <button onclick="createAccount()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl transition">
-            Aanmaken
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // COMPLETE SUBJECTS & LEVELS DATASET
-    const SUBJECTS_DATA = [
-      {
-        id: 'lijn_handschrift',
-        title: 'Lijn & Handschrift',
-        icon: 'fa-pen-nib',
-        color: 'from-amber-500 to-orange-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Contour & Omtrek',
-            theory: `
-              <p>Een <strong>lijn</strong> is de meest elementaire bouwsteen van de tekenkunst. Een lijn ontstaat wanneer een punt beweegt over een vlak.</p>
-              <p>Een <strong>omtrek- of contourlijn</strong> geeft de buitenste begrenzing van een vorm aan. Met een contourlijn scheid je het onderwerp van zijn achtergrond. Het geeft de essentie van een vorm weer zonder dat je schaduwen of details gebruikt.</p>
-              <p>In de kunstgeschiedenis werd de strakke contourlijn gebruikt om helderheid en rust in een afbeelding te creëren.</p>
-            `,
-            extraTheory: 'Onthoud: Een contourlijn volgt de buitenste rand van een object. Het definieert de vorm zonder schaduw. Oefen met het doortrekken van vloeiende lijnen zonder je potlood op te tillen.',
-            artwork: {
-              title: 'De Nachtwacht (Detail Schets)',
-              artist: 'Rembrandt van Rijn',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/The_Night_Watch_-_De_Nachtwacht_%281642%29_by_Rembrandt_van_Rijn.jpg/800px-The_Night_Watch_-_De_Nachtwacht_%281642%29_by_Rembrandt_van_Rijn.jpg',
-              analysis: 'Rembrandt gebruikt krachtige contouren in zijn voorstudies om de dynamische houding van de figuren vast te leggen voordat hij kleur toevoegt.'
-            },
-            drawingPrompt: 'Teken een schattige appel met een steltje en een blaadje met strakke contourlijnen.',
-            quizSetA: [
-              { q: 'Wat is een contourlijn?', options: ['Een lijn die de buitenste begrenzing van een vorm aangeeft', 'Een schaduwlijn in het midden van een vorm', 'Een zachte kleurovergang', 'Een stippellijn voor perspectief'], correct: 0 },
-              { q: 'Waarmee scheid je een onderwerp van de achtergrond?', options: ['Met een gum', 'Met een contourlijn', 'Met alleen glanslicht', 'Met een passer'], correct: 1 },
-              { q: 'Wat ontstaat er als een punt over een vlak beweegt?', options: ['Een kleur', 'Een vlak', 'Een lijn', 'Een ruimtelijke vorm'], correct: 2 },
-              { q: 'Gebruik je bij een pure contourtekening veel schaduwen?', options: ['Ja, heel veel', 'Nee, een contourlijn focust op de vormbegrenzing', 'Alleen met rode verf', 'Alleen in de hoeken'], correct: 1 },
-              { q: 'Welke eigenschap geeft een heldere contourlijn aan een tekening?', options: ['Snelheid en chaos', 'Helderheid en duidelijke vormweergave', 'Onleesbaarheid', 'Volledige duisternis'], correct: 1 }
-            ],
-            quizSetB: [
-              { q: 'Wat vormt de basis van elke lijn?', options: ['Een bewegend punt', 'Een vierkant', 'Een cirkel', 'Een kleurvlak'], correct: 0 },
-              { q: 'Wat beschrijft het woord "contour"?', options: ['De kleur van het vlak', 'De omtrek van een vorm', 'De zwaartekracht', 'De lichtbron'], correct: 1 },
-              { q: 'Waarom maakt een kunstenaar een contourstudie?', options: ['Om snel de vorm en verhoudingen vast te leggen', 'Om de verf te laten drogen', 'Om het doek schoon te maken', 'Om alleen schaduw te tekenen'], correct: 0 },
-              { q: 'Wat ontbreekt meestal in een simpele contourtekening?', options: ['De omtrek', 'De vorm', 'Uitgebreide schaduwen en textuur', 'Het papier'], correct: 2 },
-              { q: 'Een contourtekening richt zich vooral op:', options: ['De buitenrand van het object', 'De achtergrondkleur', 'Het papierformaat', 'De lijst om het schilderij'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Arceren & Textuur',
-            theory: `
-              <p><strong>Arceren</strong> is het tekenen van een reeks evenwijdige lijnen dicht bij elkaar om toon, schaduw en textuur te creëren.</p>
-              <p>Hoe dichter de lijnen op elkaar staan, hoe donkerder het vlak lijkt. Bij <strong>kruisarcering</strong> teken je een tweede laag lijnen die de eerste laag kruisen.</p>
-            `,
-            extraTheory: 'Arceren betekent lijnen naast elkaar zetten. Kruisarcering ontstaat als lijnen elkaar haaks of schuin kruisen voor extra donkere schaduwen.',
-            artwork: {
-              title: 'Zelfportret met open mond',
-              artist: 'Rembrandt van Rijn',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Rembrandt_van_Rijn_-_Self-Portrait_Open-Mouthed_-_Google_Art_Project.jpg/600px-Rembrandt_van_Rijn_-_Self-Portrait_Open-Mouthed_-_Google_Art_Project.jpg',
-              analysis: 'Rembrandt gebruikt fijne etslijnen en kruisarceringen om de plooien in het gezicht en de diepe schaduwen fantastisch weer te geven.'
-            },
-            drawingPrompt: 'Teken een bolletje of cirkel en geef één zijde schaduw door middel van nette arcering.',
-            quizSetA: [
-              { q: 'Wat is arceren?', options: ['Lijnen evenwijdig naast elkaar tekenen voor schaduw', 'Gaten in het papier prikken', 'Kleurvlakken volledig inschilderen', 'Cirkels trekken met een passer'], correct: 0 },
-              { q: 'Wat gebeurt er als arceerlijnen dichter op elkaar staan?', options: ['Het vlak wordt lichter', 'Het vlak lijkt donkerder', 'De kleur verandert in groen', 'De lijn verdwijnt'], correct: 1 },
-              { q: 'Wat is kruisarcering?', options: ['Eén enkele rechte lijn', 'Lagen arceerlijnen die elkaar kruisen', 'Een cirkel in een vierkant', 'Gummen in een schaduw'], correct: 1 },
-              { q: 'Waarvoor gebruik je arcering in een tekening?', options: ['Om toon, diepte en textuur te maken', 'Om de achtergrond wit te laten', 'Om de liniaal schoon te maken', 'Alleen voor handtekeningen'], correct: 0 },
-              { q: 'Welke meester stond bekend om zijn meesterlijke arceertechnieken in etsen?', options: ['Rembrandt van Rijn', 'Piet Mondriaan', 'Andy Warhol', 'Jackson Pollock'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Hoe maak je een arceerschaduw donkerder?', options: ['Door de lijnen verder uit elkaar te zetten', 'Door de lijnen dichter op elkaar te zetten of te kruisen', 'Door zachter te drukken', 'Door de lijnen uit te gummen'], correct: 1 },
-              { q: 'Kruisarcering bestaat uit:', options: ['Kruisende lijnlagen', 'Ronde stippen', 'Ingekleurde vlakken', 'Enkele dikke stippen'], correct: 0 },
-              { q: 'Met arcering geef je naast schaduw ook weer:', options: ['Textuur en oppervlaktegevoel', 'Het gewicht in kilo\'s', 'De temperatuur van het object', 'De naam van het model'], correct: 0 },
-              { q: 'Wat voor soort lijnen gebruik je bij parallelle arcering?', options: ['Gekruiste lijnen', 'Evenwijdige lijnen', 'Willekeurige cirkels', 'Golvende krabbels'], correct: 1 },
-              { q: 'Wat ontstaat er op de plek waar geen arcering staat?', options: ['Licht / hoogtepunten', 'Diepe schaduw', 'Zwarte gaten', 'Achtergrondruis'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Dynamische Handschriftlijnen',
-            theory: `
-              <p>Het <strong>handschrift</strong> van een kunstenaar is de unieke manier waarop hij of zij lijnen neerzet. Een lijn kan rustig en strak zijn, maar ook beweeglijk, wild of expressief.</p>
-              <p>Door variatie in <strong>lijndikte</strong> (van dun naar dik) breng je ritme en gevoel van gewicht over in de tekening.</p>
-            `,
-            extraTheory: 'Dynamische lijnen variëren in dikte en snelheid. Een snelle, wisselende lijn geeft energie, terwijl een dikke lijn gewicht suggereert.',
-            artwork: {
-              title: 'De Sterrennacht',
-              artist: 'Vincent van Gogh',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/800px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg',
-              analysis: 'Van Gogh gebruikt krachtige, kolkende toetsen en dynamische lijnen om de energie van de nachtelijke hemel voelbaar te maken.'
-            },
-            drawingPrompt: 'Teken een speelse golf of wolk met lijnen die afwisselend dun en dik zijn.',
-            quizSetA: [
-              { q: 'Wat verstaan we onder het "handschrift" van een kunstenaar?', options: ['Zijn geschreven brieven', 'De unieke, persoonlijke manier van lijnen en sporen maken', 'Zijn handtekening onderaan de kaart', 'Het lettertype in zijn boeken'], correct: 1 },
-              { q: 'Wat suggereert een dikkere lijn onderaan een vorm?', options: ['Gewicht en schaduw', 'Licht en zweven', 'Snelheid', 'Koude temperaturen'], correct: 0 },
-              { q: 'Welke kunstenaar staat bekend om zijn kolkende, dynamische lijnvoering?', options: ['Vincent van Gogh', 'Piet Mondriaan', 'Johannes Vermeer', 'Jan Steen'], correct: 0 },
-              { q: 'Wat breng je aan in een tekening door af te wisselen in lijndikte?', options: ['Ritme en dynamiek', 'Verveling', 'Slechtere kwaliteit', 'Onscherpte'], correct: 0 },
-              { q: 'Een snelle, vloeiende lijn straalt vaak uit:', options: ['Beweging en energie', 'Stilstand en stijfheid', 'Symmetrie', 'Geometrische precisie'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Hoe kan een lijn energie en emotie uitdrukken?', options: ['Door variatie in snelheid, dikte en richting', 'Door altijd een liniaal te gebruiken', 'Door alleen stippen te zetten', 'Door het papier op te vouwen'], correct: 0 },
-              { q: 'Lijndiktevariatie helpt bij het suggereren van:', options: ['Licht, schaduw en massa', 'De datum van vandaag', 'De prijs van de verf', 'De lengte van het potlood'], correct: 0 },
-              { q: 'Wat voor sfeer roepen strakke, liniaal-rechte lijnen op?', options: ['Rust, orde en geometrie', 'Wilde chaos en emotie', 'Warme gezelligheid', 'Organische natuur'], correct: 0 },
-              { q: 'Van Gogh gebruikte korte, krachtige verfstreken. Dit is een voorbeeld van:', options: ['Een dynamisch en herkenbaar handschrift', 'Een fout in het schilderij', 'Kopieerwerk', 'Platte achtergronden'], correct: 0 },
-              { q: 'Wat maakt een dynamische lijn anders dan een statische lijn?', options: ['Variatie in dikte, richting en spanning', 'Het is altijd een rechte lijn', 'Het heeft geen kleur', 'Het is altijd onzichtbaar'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'compositie',
-        title: 'Compositie (2D & 3D)',
-        icon: 'fa-shapes',
-        color: 'from-blue-500 to-indigo-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Driehoekscompositie & Symmetrie',
-            theory: `
-              <p><strong>Compositie</strong> is de ordening van vormen, figuren en elementen op een kunstwerk.</p>
-              <p>Een <strong>driehoekscompositie</strong> ordent de belangrijkste elementen in de vorm van een piramide of driehoek. Dit zorgt voor stabiliteit, rust en evenwicht.</p>
-              <p>Bij <strong>symmetrie</strong> zijn de linker- en rechterhelft van het kunstwerk bijna hetzelfde.</p>
-            `,
-            extraTheory: 'Een driehoekscompositie geeft rust en stevigheid. De top van de driehoek trekt meteen de aandacht van de kijker.',
-            artwork: {
-              title: 'Mona Lisa',
-              artist: 'Leonardo da Vinci',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa_%28crop%29.jpg/600px-Mona_Lisa_%28crop%29.jpg',
-              analysis: 'Da Vinci plaatst Mona Lisa in een klassieke piramide- of driehoekscompositie. Dit geeft het portret een majestueuze rust.'
-            },
-            drawingPrompt: 'Teken een eenvoudig huisje met een driehoekig dak op een rustige grondlijn.',
-            quizSetA: [
-              { q: 'Wat betekent het begrip "compositie"?', options: ['De ordening van elementen in een kunstwerk', 'Het mengen van verf', 'De lijst om het schilderij', 'Het drogen van het doek'], correct: 0 },
-              { q: 'Welk gevoel roept een driehoekscompositie op?', options: ['Stabiliteit, rust en evenwicht', 'Chaos en schrik', 'Snelheid en actie', 'Verwarring'], correct: 0 },
-              { q: 'Wanneer spreken we van symmetrie?', options: ['Als links en rechts vrijwel een spiegelbeeld zijn', 'Als alles aan één kant staat', 'Als er geen vormen te zien zijn', 'Als alle kleuren rood zijn'], correct: 0 },
-              { q: 'Welk wereldberoemd schilderij gebruikt een piramidecompositie?', options: ['Mona Lisa van Da Vinci', 'De Aardappeleters van Van Gogh', 'Victory Boogie Woogie van Mondriaan', 'Campbell Soup Cans van Warhol'], correct: 0 },
-              { q: 'Waar trekt de top van een driehoekscompositie vaak de aandacht naartoe?', options: ['Naar een belangrijk hoofdelement', 'Naar de rand van het doek', 'Naar de handtekening', 'Naar de vloer'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Een compositie vormt de:', options: ['Skelet of opbouw van het kunstwerk', 'Kleur van het potlood', 'Naam van het museum', 'Dikte van het papier'], correct: 0 },
-              { q: 'Waarom berekenden Renaissance meesters hun composities nauwkeurig?', options: ['Om harmonie en rust te bereiken', 'Om verf te besparen', 'Omdat doeken erg duur waren', 'Om snel klaar te zijn'], correct: 0 },
-              { q: 'Symmetrische composities voelen vaak:', options: ['Statisch en formeel aan', 'Wild en ongecontroleerd aan', 'Slordig aan', 'Grappig aan'], correct: 0 },
-              { q: 'Een driehoekige opstelling zorgt voor:', options: ['Visuele stevigheid en balans', 'Een gevoel van omvallen', 'Wazige beelden', 'Lijnbreuken'], correct: 0 },
-              { q: 'Wat staat er bij een portret in driehoekscompositie vaak aan de basis?', options: ['De schouders of armen', 'Alleen het oog', 'De achtergrondbomen', 'Het kader'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Regel van Derden & Dynamiek',
-            theory: `
-              <p>De <strong>Regel van Derden</strong> is een bekende compositieregel. Je verdeelt het beeld met 2 horizontale en 2 verticale lijnen in 9 gelijke vakken.</p>
-              <p>Door je hoofdonderwerp op een van de **snijpunten** van deze lijnen te plaatsen, wordt het beeld spannender en dynamischer dan wanneer je het precies in het midden zet.</p>
-            `,
-            extraTheory: 'Zet je hoofdonderwerp niet precies in het midden! Plaats het op 1/3 van de rand voor een veel spannender en natuurlijk beeld.',
-            artwork: {
-              title: 'Het Melkmeisje',
-              artist: 'Johannes Vermeer',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Johannes_Vermeer_-_Het_melkmeisje_-_Google_Art_Project.jpg/600px-Johannes_Vermeer_-_Het_melkmeisje_-_Google_Art_Project.jpg',
-              analysis: 'Vermeer plaatst het melkmeisje net buiten het exacte midden op een belangrijk snijpunt, wat zorgt voor een prachtige natuurlijke balans.'
-            },
-            drawingPrompt: 'Teken een kleine zon en wolk net niet in het midden, maar aan de zijkant van het doek.',
-            quizSetA: [
-              { q: 'In hoeveel vakken verdeelt de Regel van Derden het doek?', options: ['4 vakken', '9 gelijke vakken', '2 vakken', '100 vakken'], correct: 1 },
-              { q: 'Waar kun je het hoofdonderwerp het beste plaatsen volgens deze regel?', options: ['Exact in het dode midden', 'Op een van de snijpunten van de verdeellijnen', 'Onder de lijst', 'In de uiterste hoek geknipt'], correct: 1 },
-              { q: 'Wat is het voordeel van de Regel van Derden ten opzichte van een compositie precies in het midden?', options: ['Het beeld wordt dynamischer en spannender', 'Het schilderij wordt kleiner', 'Je hebt minder verf nodig', 'Het wordt symmetrisch'], correct: 0 },
-              { q: 'Hoeveel horizontale lijnen gebruik je bij het verdelen?', options: ['2 lijnen', '3 lijnen', '9 lijnen', 'Geen lijnen'], correct: 0 },
-              { q: 'Johannes Vermeer gebruikte subtiele composities. Waar plaatste hij zijn figuren vaak?', options: ['Op strategische snijpunten nabij een lichtbron', 'Altijd op de kop', 'Buiten het doek', 'In een cirkel'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Wat gebeurt er als je alles precies in het midden plaatst?', options: ['Het kan soms saai of erg statisch worden', 'Het schilderij valt om', 'Het wordt automatisch lelijk', 'De verf droogt niet'], correct: 0 },
-              { q: 'Snijpunten in de Regel van Derden noemen we ook wel:', options: ['Aandachtspunten of ' + 'power points', 'Eindpunten', 'Gum-hoeken', 'Verdwijnpunten'], correct: 0 },
-              { q: 'Hoe verdeel je het vlak voor de Regel van Derden?', options: ['Met 2 verticale en 2 horizontale evenwijdige lijnen', 'Met een grote cirkel', 'Met diagonale kruisen', 'Met een stippellijn'], correct: 0 },
-              { q: 'Voor welke vorm van kunst wordt de Regel van Derden veel gebruikt?', options: ['Schilderkunst én fotografie', 'Alleen bij pottebakken', 'Alleen bij muziek', 'Bij beeldhouwen in steen'], correct: 0 },
-              { q: 'Compositie met asymmetrie en de Regel van Derden zorgt voor:', options: ['Visuele spanning en natuurlijke balans', 'Strikte spiegeling', 'Chaos', 'Onleesbaarheid'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Diagonale & Beweeglijke Compositie',
-            theory: `
-              <p>Een <strong>diagonale compositie</strong> gebruikt schuine lijnen. Schuine lijnen roepen bij de kijker een gevoel van beweging, actie, snelheid of instabiliteit op.</p>
-              <p>In barokke en moderne kunstwerken worden diagonalen gebruikt om drama en energie over te brengen.</p>
-            `,
-            extraTheory: 'Horizontale lijnen geven rust, verticale lijnen geven hoogte, maar schuine (diagonale) lijnen zorgen voor pure actie en beweging!',
-            artwork: {
-              title: 'De Storm op het Meer van Galilea',
-              artist: 'Rembrandt van Rijn',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Rembrandt_Christ_in_the_Storm_on_the_Lake_of_Galilee_1633.jpg/600px-Rembrandt_Christ_in_the_Storm_on_the_Lake_of_Galilee_1633.jpg',
-              analysis: 'De schuine boot die door de golven snijdt vormt een krachtige diagonaal die de stormachtige dynamiek versterkt.'
-            },
-            drawingPrompt: 'Teken twee schuine, parallelle lijnen die als een snelle glijbaan door het doek lopen.',
-            quizSetA: [
-              { q: 'Welk gevoel roepen schuine (diagonale) lijnen op?', options: ['Beweging, actie en spanning', 'Totale rust en slaap', 'Symmetrie', 'Platheid'], correct: 0 },
-              { q: 'Welke lijnrichting geeft juist het meeste gevoel van rust?', options: ['Horizontale lijnen', 'Diagonale lijnen', 'Kolkende cirkels', 'Scherpe zigzaglijnen'], correct: 0 },
-              { q: 'In welke kunstperiode werd de diagonale compositie veel gebruikt voor drama?', options: ['De Barok', 'De Midden-Eeuwen', 'Het Egyptische Rijk', 'De Prehistorie'], correct: 0 },
-              { q: 'Wat doen verticale lijnen vaak in een compositie?', options: ['Ze suggereren hoogte, waardigheid en strakheid', 'Ze laten het beeld draaien', 'Ze maken alles rond', 'Ze wisselen van kleur'], correct: 0 },
-              { q: 'Een actiescène in een stripverhaal gebruikt vooral:', options: ['Diagonale compositielijnen', 'Alleen rechte horizonten', 'Cirkeldiagrammen', 'Vierkante kaders zonder inhoud'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Waarom kiest een kunstenaar voor schuine lijnen?', options: ['Om de suggestie van actie of snelheid te wekken', 'Omdat zijn liniaal gebroken was', 'Om een stilstaand gebouw te tekenen', 'Om rust uit te stralen'], correct: 0 },
-              { q: 'Wat is de werking van een sterke diagonaal van linksonder naar rechtsboven?', options: ['Het trekt het oog mee omhoog (stijgende lijn)', 'Het sluit het beeld af', 'Het maakt de afbeelding donkerder', 'Het wist het beeld uit'], correct: 0 },
-              { q: 'Een compositie vol horizontale lijnen lijkt op:', options: ['Een rustig landschap of een liggend figuur', 'Een wilde storm', 'Een ontploffing', 'Een denderende trein'], correct: 0 },
-              { q: 'Snelheid in een compositie bereik je door:', options: ['Schuine lijnen en dynamische richtingen', 'Alles vierkant te maken', 'Symmetrisch te werken', 'Alleen grijstinten te gebruiken'], correct: 0 },
-              { q: 'Diagonale lijnen breken de:', options: ['Statische rust van het rechthoekige doek', 'Kwaliteit van de verf', 'Kleur van het werk', 'Lijst van het schilderij'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'kleur',
-        title: 'Kleur & Kleurcontrasten',
-        icon: 'fa-palette',
-        color: 'from-rose-500 to-pink-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Primaire & Secundaire Kleuren',
-            theory: `
-              <p><strong>Primaire kleuren</strong> zijn de basiskleuren die je niet kunt maken door andere kleuren te mengen. Dit zijn: <strong>Rood, Geel en Blauw</strong>.</p>
-              <p>Wanneer je twee primaire kleuren mengt, krijg je een <strong>secundaire kleur</strong>:</p>
-              <ul>
-                <li>Rood + Geel = <strong>Oranje</strong></li>
-                <li>Geel + Blauw = <strong>Groen</strong></li>
-                <li>Blauw + Rood = <strong>Paars / Violet</strong></li>
-              </ul>
-            `,
-            extraTheory: 'Primaire kleuren (Rood, Geel, Blauw) zijn de zuivere basis. Meng je er twee, dan krijg je een secundaire kleur (Oranje, Groen, Paars).',
-            artwork: {
-              title: 'Compositie met Rood, Geel en Blauw',
-              artist: 'Piet Mondriaan',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Piet_Mondrian_%281921%29_Composition_en_rouge%2C_jaune%2C_bleu_et_noir.jpg/600px-Piet_Mondrian_%281921%29_Composition_en_rouge%2C_jaune%2C_bleu_et_noir.jpg',
-              analysis: 'Mondriaan gebruikt uitsluitend de drie primaire kleuren samen met zwart en wit om de meest zuivere vorm van kunst te maken.'
-            },
-            drawingPrompt: 'Teken een vrolijke ballon met je favoriete primaire of secundaire kleur.',
-            quizSetA: [
-              { q: 'Wat zijn de drie primaire kleuren?', options: ['Rood, Geel en Blauw', 'Groen, Oranje en Paars', 'Zwart, Wit en Grijs', 'Roze, Bruin en Cyan'], correct: 0 },
-              { q: 'Welke kleur krijg je als je Rood en Geel mengt?', options: ['Groen', 'Oranje', 'Paars', 'Bruin'], correct: 1 },
-              { q: 'Welke kleur ontstaat uit Geel en Blauw?', options: ['Groen', 'Paars', 'Oranje', 'Zwart'], correct: 0 },
-              { q: 'Kun je primaire kleuren maken door andere kleuren te mengen?', options: ['Ja, met heel veel wit', 'Nee, primaire kleuren zijn de zuivere basis', 'Alleen als je water toevoegt', 'Ja, met paars en groen'], correct: 1 },
-              { q: 'Welke kunstenaar is beroemd om zijn schilderijen met rood, geel, blauw en zwarte lijnen?', options: ['Piet Mondriaan', 'Rembrandt', 'Claude Monet', 'Salvador Dalí'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Wat ontstaat er als je twee primaire kleuren mengt?', options: ['Een secundaire kleur', 'Een tertiaire kleur', 'Zwart', 'Een onzichtbare kleur'], correct: 0 },
-              { q: 'Blauw + Rood levert welke kleur op?', options: ['Oranje', 'Groen', 'Paars / Violet', 'Geel'], correct: 2 },
-              { q: 'Welke van de volgende is GEEN primaire kleur?', options: ['Rood', 'Groen', 'Blauw', 'Geel'], correct: 1 },
-              { q: 'Hoe noemen we oranje, groen en paars samen?', options: ['Secundaire kleuren', 'Primaire kleuren', 'Achromatische kleuren', 'Donkere tonen'], correct: 0 },
-              { q: 'In de kleurencirkel liggen de secundaire kleuren:', options: ['Tussen de twee primaire kleuren waaruit ze gemengd zijn', 'Helemaal buiten de cirkel', 'In het exacte midden', 'Achter de achtergrond'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Complementair Contrast',
-            theory: `
-              <p><strong>Complementaire kleuren</strong> zijn kleuren die recht tegenover elkaar liggen in de kleurencirkel:</p>
-              <ul>
-                <li><strong>Rood</strong> staat tegenover <strong>Groen</strong></li>
-                <li><strong>Blauw</strong> staat tegenover <strong>Oranje</strong></li>
-                <li><strong>Geel</strong> staat tegenover <strong>Paars</strong></li>
-              </ul>
-              <p>Wanneer je deze kleuren naast elkaar zet, versterken ze elkaar enorm. Ze lijken daardoor nog sprekender en feller!</p>
-            `,
-            extraTheory: 'Complementaire paartjes: Rood/Groen, Blauw/Oranje, Geel/Paars. Naast elkaar knallen ze van het doek af!',
-            artwork: {
-              title: 'Het Nachtcafé',
-              artist: 'Vincent van Gogh',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Vincent_Van_Gogh_-_The_Night_Caf%C3%A9_-_Google_Art_Project.jpg/600px-Vincent_Van_Gogh_-_The_Night_Caf%C3%A9_-_Google_Art_Project.jpg',
-              analysis: 'Van Gogh gebruikt hevig rood tegenover knallend groen om een geladen en intense sfeer in het café op te roepen.'
-            },
-            drawingPrompt: 'Teken een simpele bloem met een rood hartje en groene blaadjes.',
-            quizSetA: [
-              { q: 'Waar liggen complementaire kleuren in de kleurencirkel?', options: ['Recht tegenover elkaar', 'Naast elkaar', 'In het midden', 'Boven elkaar'], correct: 0 },
-              { q: 'Welke kleur is de complementaire kleur van Rood?', options: ['Groen', 'Blauw', 'Geel', 'Oranje'], correct: 0 },
-              { q: 'Welke kleur staat tegenover Blauw in de kleurencirkel?', options: ['Oranje', 'Paars', 'Groen', 'Rood'], correct: 0 },
-              { q: 'Wat gebeurt er als je complementaire kleuren direct naast elkaar gebruikt?', options: ['Ze versterken elkaar en lijken feller', 'Ze worden onzichtbaar', 'Ze veranderen in grijs', 'Ze smelten direct samen'], correct: 0 },
-              { q: 'Wat is de complementaire kleur van Geel?', options: ['Paars', 'Groen', 'Rood', 'Roze'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Het paar Blauw en Oranje vormt een:', options: ['Complementair contrast', 'Warm-koud contrast', 'Licht-donker contrast', 'Kwaliteitscontrast'], correct: 0 },
-              { q: 'Waarom gebruiken reclame-ontwerpers vaak complementaire kleuren?', options: ['Omdat het enorm opvalt en de aandacht trekt', 'Omdat het goedkoop is', 'Omdat het saai is', 'Om letters te verbergen'], correct: 0 },
-              { q: 'Wat gebeurt er als je complementaire verfkleuren VOLLEDIG door elkaar mengt?', options: ['Je krijgt een neutrale/bruin-grijze tint', 'Je krijgt lichtgevend geel', 'Je krijgt transparant water', 'Je krijgt zuiver wit'], correct: 0 },
-              { q: 'Rood en Groen naast elkaar zorgen voor:', options: ['Een krachtig kleurcontrast', 'Een heel flauw effect', 'Een zwart-wit beeld', 'Symmetrie'], correct: 0 },
-              { q: 'Welke schilder gebruikte Rood en Groen om emoties in een café weer te geven?', options: ['Vincent van Gogh', 'Mondriaan', 'Da Vinci', 'Escher'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Warm-Koud Contrast',
-            theory: `
-              <p>Kleuren hebben een temperatuurgevoel:</p>
-              <ul>
-                <li><strong>Warme kleuren</strong>: Rood, Oranje, Geel. Ze doen denken aan vuur en de zon. Ze lijken naar voren te komen.</li>
-                <li><strong>Koude kleuren</strong>: Blauw, Groen, Violet. Ze doen denken aan ijs, water en de lucht. Ze lijken naar achteren te wijken.</li>
-              </ul>
-              <p>Door warme en koude kleuren te combineren creëer je diepte én sfeer in je kunstwerk.</p>
-            `,
-            extraTheory: 'Warme kleuren (Rood/Oranje/Geel) komen op de kijker af. Koude kleuren (Blauw/Groen) wijken naar de achtergrond.',
-            artwork: {
-              title: 'Impression, Soleil Levant',
-              artist: 'Claude Monet',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Monet_-_Impression%2C_Soleil_levant.jpg/600px-Monet_-_Impression%2C_Soleil_levant.jpg',
-              analysis: 'Monet schildert de oranje oranje zon (warm) tegen een koele blauwgrijze lucht en zee (koud), wat een magische lichtwerking geeft.'
-            },
-            drawingPrompt: 'Teken een oranje zonnetje boven een blauwe zee.',
-            quizSetA: [
-              { q: 'Welke kleuren horen bij de warme kleuren?', options: ['Rood, Oranje en Geel', 'Blauw, Paars en Groen', 'Zwart, Grijs en Wit', 'Bruin, Zwart en Blauw'], correct: 0 },
-              { q: 'Wat doen warme kleuren optisch in een schilderij?', options: ['Ze lijken naar voren te komen', 'Ze wijken naar de achtergrond', 'Ze verdwijnen volledig', 'Ze worden zwart'], correct: 0 },
-              { q: 'Wat doen koude kleuren optisch?', options: ['Ze lijken naar achteren te wijken', 'Ze springen direct naar voren', 'Ze lichten op in het donker', 'Ze maken het doek zwaarder'], correct: 0 },
-              { q: 'Aan welke elementen doen koude kleuren denken?', options: ['IJs, water en de lucht', 'Vuur en de zon', 'Woestijnzand', 'Warme chocolademelk'], correct: 0 },
-              { q: 'Claude Monet schilderde een oranje zon boven een blauwe zee. Welk contrast is dit?', options: ['Warm-Koud contrast', 'Vormcontrast', 'Symmetrie-contrast', 'Textuurcontrast'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Welke kleur roept het sterkste koude gevoel op?', options: ['Blauw', 'Rood', 'Oranje', 'Geel'], correct: 0 },
-              { q: 'Hoe kun je diepte suggereren met kleurtemperatuur?', options: ['Warme kleuren op de voorgrond, koude kleuren in de achtergrond', 'Koude kleuren vooraan, warme achteraan', 'Alles oranje maken', 'Geen kleur gebruiken'], correct: 0 },
-              { q: 'Aan welk natuurelement doen warme kleuren denken?', options: ['Vuur, lava en zonlicht', 'Gletsjers en sneeuw', 'De diepe oceaan', 'Nachtelijke nevel'], correct: 0 },
-              { q: 'Koude kleuren zorgen in een schilderij vaak voor een gevoel van:', options: ['Rust, afstand en koelte', 'Hitte en opwinding', 'Gevaar en spoorzoeking', 'Lawaai'], correct: 0 },
-              { q: 'Combineer je een warme achtergrond met een koude voorgrond, dan ontstaat er:', options: ['Visuele spanning door temperatuurcontrast', 'Automatisch een zwart vlak', 'Een geometrische vorm', 'Een contourlijn'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'vorm',
-        title: 'Vorm & Restvorm',
-        icon: 'fa-vector-square',
-        color: 'from-emerald-500 to-teal-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Geometrisch vs Organisch',
-            theory: `
-              <p>Vormen zijn er in twee hoofdsoorten:</p>
-              <ul>
-                <li><strong>Geometrische vormen</strong>: Strakke, wiskundige vormen die met liniaal of passer getekend kunnen worden (vierkant, cirkel, driehoek, rechthoek).</li>
-                <li><strong>Organische vormen</strong>: Vloeiende, natuurlijke vormen die grillig en gebogen zijn (zoals blaadjes, wolken, mensen en dieren).</li>
-              </ul>
-            `,
-            extraTheory: 'Geometrisch = Wiskundig en strak (vierkant, cirkel). Organisch = Natuurlijk en vloeiend (blad, wolk, dier).',
-            artwork: {
-              title: 'De Parkiet en de Zeemeermin',
-              artist: 'Henri Matisse',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Henri_Matisse%2C_1952%2C_La_Perruche_et_la_Sir%C3%A8ne.jpg/600px-Henri_Matisse%2C_1952%2C_La_Perruche_et_la_Sir%C3%A8ne.jpg',
-              analysis: 'Matisse knipte speelse organische vormen uit papier die vloeiende planten en dieren verbeelden.'
-            },
-            drawingPrompt: 'Teken een geometrisch vierkant én daarnaast een organisch blaadje.',
-            quizSetA: [
-              { q: 'Wat is een kenmerk van geometrische vormen?', options: ['Strak, wiskundig en precies (zoals cirkel of vierkant)', 'Grillig en willekeurig uit de natuur', 'Altijd zacht en pluizig', 'Onzichtbaar'], correct: 0 },
-              { q: 'Wat is een voorbeeld van een organische vorm?', options: ['Een boomblad of een wolk', 'Een perfect vierkant', 'Een liniaal', 'Een kubus'], correct: 0 },
-              { q: 'Welk hulpmiddel gebruik je vaak bij geometrische vormen?', options: ['Liniaal of passer', 'Spons', 'Water', 'Gum'], correct: 0 },
-              { q: 'Henri Matisse maakte papieren uitsnedes van planten. Dit zijn:', options: ['Organische vormen', 'Geometrische kubussen', 'Driepuntsperspectieven', 'Schaduwlijnen'], correct: 0 },
-              { q: 'Is een driehoek geometrisch of organisch?', options: ['Geometrisch', 'Organisch', 'Geen van beide', 'Beide tegelijk'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Vormen uit de vrije natuur zijn meestal:', options: ['Organisch', 'Geometrisch', 'Wiskundig berekend', 'Rechthoekig'], correct: 0 },
-              { q: 'Een cirkel, vierkant en driehoek noemen we:', options: ['Geometrische basisvormen', 'Organische figuren', 'Restvormen', 'Slagschaduwen'], correct: 0 },
-              { q: 'Organische vormen hebben vaak:', options: ['Gebogen, vloeiende en grillige lijnen', 'Altijd hoeken van 90 graden', 'Lijnen die getrokken zijn met een liniaal', 'Geen randen'], correct: 0 },
-              { q: 'In moderne architectuur zie je veel strakke glazen blokken. Dit zijn:', options: ['Geometrische vormen', 'Organische vormen', 'Vloeibare vormen', 'Restvormen'], correct: 0 },
-              { q: 'Combineer je een strakke kubus met een grillige plant, dan ontstaat er een:', options: ['Vormcontrast (Geometrisch vs Organisch)', 'Kleurcontrast', 'Licht contrast', 'Perspectieffout'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Positieve & Negatieve Vorm (Restvorm)',
-            theory: `
-              <p>Wanneer je een vorm tekent, ontstaan er twee elementen op het doek:</p>
-              <ul>
-                <li><strong>Positieve vorm</strong>: Het object zelf dat je tekent (bijvoorbeeld een vaas).</li>
-                <li><strong>Negatieve vorm (Restvorm)</strong>: De ruimte óm en tussen het object in.</li>
-              </ul>
-              <p>Goed leren kijken naar de restvorm helpt enorm om moeilijke onderwerpen juist te tekenen!</p>
-            `,
-            extraTheory: 'Positieve vorm = het getekende voorwerp. Restvorm (negatieve vorm) = de lege ruimte eromheen en ertussenin.',
-            artwork: {
-              title: 'Lucht en Water I',
-              artist: 'M.C. Escher',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a2/Sky_and_Water_I.jpg/300px-Sky_and_Water_I.jpg',
-              analysis: 'Escher laat vogels (positief) naadloos overgaan in vissen (negatieve restvorm) in een meesterlijke metamorfose.'
-            },
-            drawingPrompt: 'Teken een schaar of sleutel en kleur de lege ruimte tussen de handvatten in.',
-            quizSetA: [
-              { q: 'Wat is de positieve vorm?', options: ['Het voorwerp/object dat je tekent', 'De achtergrond buiten het papier', 'De lege ruimte tussen de benen van een stoel', 'De schaduw op de muur'], correct: 0 },
-              { q: 'Wat is de negatieve vorm of restvorm?', options: ['De lege ruimte om en binnen het getekende object', 'Een foute tekening', 'Het doek aan de achterkant', 'De rand van de tafel'], correct: 0 },
-              { q: 'Welke Nederlandse kunstenaar staat bekend om zijn spel met positieve en negatieve restvormen?', options: ['M.C. Escher', 'Rembrandt', 'Monet', 'Jan Steen'], correct: 0 },
-              { q: 'Waarom kijken kunstenaars vaak naar de restvorm?', options: ['Om de juiste verhoudingen van het hoofdonderwerp te controleren', 'Om sneller klaar te zijn met verven', 'Om het doek niet te beschadigen', 'Om verf op te sparen'], correct: 0 },
-              { q: 'Als je een mok tekent, wat is dan de restvorm bij het oor?', options: ['Het gat/de opening in het handvat', 'Het keramiek van het oor zelf', 'De koffie in de mok', 'Het lepeltje'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'In een tekening van een stoel is de ruimte tussen de stoelpoten de:', options: ['Restvorm (negatieve vorm)', 'Positieve vorm', 'Horizon', 'Glanslijn'], correct: 0 },
-              { q: 'Als de positieve vorm wit is en de achtergrond zwart, dan is de zwarte ruimte de:', options: ['Negatieve vorm / restvorm', 'Primaire vorm', 'Symmetrie-as', 'Contourlijn'], correct: 0 },
-              { q: 'Het bewust tekenen van de omringende lege ruimte noemt men:', options: ['Tekenen naar de restvorm', 'Slecht tekenen', 'Perspectieftekenen', 'Arceren'], correct: 0 },
-              { q: 'Escher transformeert in zijn werk vogels in vissen. Wat verandert er continu?', options: ['De rol van de positieve en negatieve vorm', 'De maat van het papier', 'De verfsoort', 'De datum'], correct: 0 },
-              { q: 'Het samenspel tussen de vorm en de restvorm bepaalt de:', options: ['Balans op het doek', 'Dikte van de potloodpunt', 'Naam van het schilderij', 'Temperatuur'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Ruimtelijke Vorm (3D)',
-            theory: `
-              <p>Platte vormen op papier hebben 2 dimensies (lengte en breedte). We noemen dit <strong>2D-vormen</strong>.</p>
-              <p>Wanneer een vorm ook diepte heeft (of gesuggereerd wordt), spreken we van een <strong>3D-vorm</strong> of ruimtelijke vorm. Denk aan de overgang van vierkant naar kubus, of van cirkel naar bol.</p>
-            `,
-            extraTheory: '2D is plat (vierkant, cirkel). 3D heeft volume en diepte (kubus, bol, piramide, cilinder).',
-            artwork: {
-              title: 'Het Sanatorium',
-              artist: 'Paul Cézanne',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Paul_C%C3%A9zanne_-_Mont_Sainte-Victoire_-_Google_Art_Project.jpg/600px-Paul_C%C3%A9zanne_-_Mont_Sainte-Victoire_-_Google_Art_Project.jpg',
-              analysis: 'Cézanne reduceerde de natuur in zijn landschappen tot elementaire ruimtelijke vormen als de kubus, de bol en de kegel.'
-            },
-            drawingPrompt: 'Teken een strakke kubus door twee vierkanten te verbinden met schuine schuiflijnen.',
-            quizSetA: [
-              { q: 'Hoeveel dimensies heeft een platte cirkel op papier?', options: ['2 dimensies (2D: lengte en breedte)', '3 dimensies (3D)', '1 dimensie', '4 dimensies'], correct: 0 },
-              { q: 'Wat is de 3D-pendant van een vierkant?', options: ['Een kubus', 'Een driehoek', 'Een cirkel', 'Een platte lijn'], correct: 0 },
-              { q: 'Wat is de ruimtelijke 3D-vorm van een cirkel?', options: ['Een bol', 'Een vierkant', 'Een piramide', 'Een plat vlak'], correct: 0 },
-              { q: 'Welke schilder zei dat de hele natuur terug te brengen is tot bol, kegel en cilinder?', options: ['Paul Cézanne', 'Mondriaan', 'Van Gogh', 'Rembrandt'], correct: 0 },
-              { q: 'Een cilinder is de 3D-vorm van een:', options: ['Cirkel met hoogte/buis', 'Kubus', 'Driehoek', 'Punt'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Wat voeg je toe aan een 2D-vorm om er een 3D-suggestie van te maken?', options: ['Diepte / volume', 'Alleen rode kleur', 'Een handtekening', 'Een bredere rand'], correct: 0 },
-              { q: 'Een piramide is een 3D-vorm met als basis vaak een:', options: ['Vierkant of driehoek', 'Bol', 'Cilinder', 'Cirkel'], correct: 0 },
-              { q: 'Hoe noem je de ruimte die een 3D-object inneemt?', options: ['Volume of massa', 'Restvorm', 'Contour', 'Horizon'], correct: 0 },
-              { q: 'Op een plat vlak blijft een getekende kubus altijd een:', options: ['Suggestie van 3D (optische illusie)', 'Echte steen', '2D cirkel', 'Plat papier zonder vorm'], correct: 0 },
-              { q: 'Welke vormen hebben lengte, breedte én diepte?', options: ['3D-vormen', '2D-vormen', 'Lijnen', 'Punten'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'ruimte',
-        title: 'Ruimte & Perspectief',
-        icon: 'fa-mountain-sun',
-        color: 'from-purple-500 to-violet-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Eénpuntsperspectief',
-            theory: `
-              <p><strong>Perspectief</strong> is de manier waarop we diepte suggereren op een plat doek.</p>
-              <p>Bij <strong>éénpuntsperspectief</strong> komen alle wijkende evenwijdige lijnen samen in één enkel punt op de ooghoogte-lijn (de horizon). Dit punt heet het <strong>verdwijnpunt</strong>.</p>
-            `,
-            extraTheory: 'Eénpuntsperspectief heeft 1 verdwijnpunt op de horizon. Lijnen die de diepte in gaan lopen allemaal naar dit ene punt!',
-            artwork: {
-              title: 'De Slaapkamer',
-              artist: 'Vincent van Gogh',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Vincent_van_Gogh_-_De_slaapkamer_-_Google_Art_Project.jpg/600px-Vincent_van_Gogh_-_Vincent_van_Gogh_-_De_slaapkamer_-_Google_Art_Project.jpg',
-              analysis: 'Van Gogh gebruikt de wijkende lijnen van de vloerplanken en het bed die samenbrengen naar het verdwijnpunt achterin de kamer.'
-            },
-            drawingPrompt: 'Teken een horizon met één verdwijnpunt en een recht pad dat naar het verdwijnpunt toe smaller wordt.',
-            quizSetA: [
-              { q: 'Waar komen wijkende lijnen samen bij perspectieftekenen?', options: ['In het verdwijnpunt op de horizon', 'In de hoek van het doek', 'In het midden van de zon', 'Nergens'], correct: 0 },
-              { q: 'Wat is de horizon in een perspectieftekening?', options: ['De lijn op ooghoogte van de waarnemer', 'De onderkant van het doek', 'Een wolk in de lucht', 'De dikte van het potlood'], correct: 0 },
-              { q: 'Hoeveel verdwijnpunten heeft éénpuntsperspectief?', options: ['1 verdwijnpunt', '2 verdwijnpunten', '3 verdwijnpunten', 'Geen'], correct: 0 },
-              { q: 'Wat gebeurt er met voorwerpen als ze verder van de kijker af staan?', options: ['Ze lijken kleiner', 'Ze lijken groter', 'Ze worden fel rood', 'Ze veranderen van vorm'], correct: 0 },
-              { q: 'Van Gogh gebruikte wijkende lijnen in zijn schilderij "De Slaapkamer". Wat laten die lijnen zien?', options: ['Diepte in de kamer', 'Dat het bed scheef is gemaakt', 'Dat de muur omvalt', 'Een platte muur'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Wijkende parallelle lijnen (zoals een spoorlijn) lijken in de verte:', options: ['Naar elkaar toe te lopen richting het verdwijnpunt', 'Steeds breder te worden', 'Op te lossen in cirkels', 'Haaks te draaien'], correct: 0 },
-              { q: 'Op welke lijn ligt het verdwijnpunt altijd?', options: ['Op de horizon (ooghoogte)', 'Op de verticalen', 'Aan de rand van de lijst', 'In de schaduw'], correct: 0 },
-              { q: 'Wat gebeurt er met de afstand tussen lantaarnpalen in een perspectieftekening als ze verder weg staan?', options: ['De afstand lijkt steeds kleiner te worden', 'De afstand blijft op papier exact hetzelfde', 'Ze worden groter', 'Ze vallen om'], correct: 0 },
-              { q: 'Perspectieftekenen is een manier om:', options: ['Diepte te faken op een plat vlak', 'In 3D te printen', 'Verf sneller te mengen', 'Lijnen te gummen'], correct: 0 },
-              { q: 'Als je vanuit het midden op een rechte weg kijkt, komen de wegkanten samen:', options: ['In het verdwijnpunt aan de horizon', 'Bij je voeten', 'In de wolken', 'Aan de linker rand'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Overlapping & Afsnoering',
-            theory: `
-              <p>Je kunt ook diepte maken zonder ingewikkelde lijnen, gewoon door slimme ruimtelijke trucs:</p>
-              <ul>
-                <li><strong>Overlapping</strong>: Het voorste object bedekt een deel van het object erachter. De kijker weet meteen dat het bedekte object verder weg staat!</li>
-                <li><strong>Grootteverschil</strong>: Grote objecten lijken dichtbij, kleine objecten lijken ver weg.</li>
-              </ul>
-            `,
-            extraTheory: 'Overlapping is simpel: staat een vorm VOOR een andere vorm, dan bedekt hij die deels. Dit geeft meteen diepte!',
-            artwork: {
-              title: 'De Paraplu\'s',
-              artist: 'Pierre-Auguste Renoir',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Pierre-Auguste_Renoir_-_Les_Parapluies.jpg/600px-Pierre-Auguste_Renoir_-_Les_Parapluies.jpg',
-              analysis: 'Renoir laat tientallen paraplu\'s en mensen elkaar overlappen. Hierdoor voelt de menigte ongelooflijk ruimtelijk en dichtbevolkt.'
-            },
-            drawingPrompt: 'Teken een grote cirkel die gedeeltelijk voor een kleinere cirkel staat (overlapping).',
-            quizSetA: [
-              { q: 'Wat is overlapping?', options: ['Het ene object staat deels voor het andere en bedekt het', 'Twee lijnen die elkaar kruisen met een liniaal', 'Schilderen over de rand van de lijst', 'Verf mengen met water'], correct: 0 },
-              { q: 'Hoe weet je bij overlapping welk object dichterbij staat?', options: ['Het object dat volledig te zien is staat vooraan', 'Het bedekte object staat vooraan', 'Het kleinste object staat vooraan', 'Het object zonder kleur'], correct: 0 },
-              { q: 'Wat gebeurt er met de perceptie van schaal bij grootteverschil?', options: ['Grote vormen lijken dichtbij, kleine vormen ver weg', 'Kleine vormen lijken dichtbij', 'Alles blijft op dezelfde afstand lijken', 'Het schilderij krimpt'], correct: 0 },
-              { q: 'Welke Franse impressionist overlapte tientallen paraplu\'s voor diepte?', options: ['Renoir', 'Mondriaan', 'Escher', 'Rembrandt'], correct: 0 },
-              { q: 'Heb je voor overlapping noodzakelijk verdwijnpunten nodig?', options: ['Nee, overlapping werkt ook zonder perspectieflijnen', 'Ja, altijd 3 verdwijnpunten', 'Alleen als het regent', 'Ja, anders mag het niet'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Overlapping geeft de kijker informatie over:', options: ['De volgorde van voor naar achter (ruimtelijke plaatsing)', 'De temperatuur van de kamer', 'De prijs van het schilderij', 'De leeftijd van de maker'], correct: 0 },
-              { q: 'Als een kleine boom boven een grote boom staat zonder overlapping, lijkt de kleine boom:', options: ['Verder weg in de achtergrond', 'Zwaarder', 'Dichterbij', 'Groter'], correct: 0 },
-              { q: 'Staan drie overlappende figuren achter elkaar, dan zie je van de achterste figuur:', options: ['Slechts een gedeelte', 'Alles volledig', 'Helemaal niets', 'Alleen zijn voeten'], correct: 0 },
-              { q: 'Welke eenvoudige methode geeft direct een gevoel van diepte op papier?', options: ['Vormen elkaar laten overlappen', 'Het papier dubbelvouwen', 'Rode verf gebruiken', 'Lijnen wissen'], correct: 0 },
-              { q: 'Grootteverschil gecombineerd met overlapping zorgt voor:', options: ['Een sterk gevoel van ruimtelijke diepte', 'Een platte striptekening', 'Een geometrisch patroon', 'Symmetrie'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Atmosferisch Perspectief',
-            theory: `
-              <p><strong>Atmosferisch perspectief</strong> maakt gebruik van de lucht (atmosfeer) om diepte aan te geven in landschappen:</p>
-              <ul>
-                <li><strong>Voorgrond</strong>: Scherpe details, warme en verzadigde kleuren, sterk contrast.</li>
-                <li><strong>Achtergrond</strong>: Vervagende details, koelere/blauwere tinten, minder contrast.</li>
-              </ul>
-            `,
-            extraTheory: 'Vervaging + Blauwere/lichtere tinten in de verte = Atmosferisch perspectief (zoals bergen in de nevel).',
-            artwork: {
-              title: 'Mona Lisa (Achtergrond)',
-              artist: 'Leonardo da Vinci',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa_%28crop%29.jpg/600px-Mona_Lisa_%28crop%29.jpg',
-              analysis: 'Da Vinci schilderde de bergen in de achtergrond licht blauw-grijs en wazig (Sfumato) om kilometers diepte te suggereren.'
-            },
-            drawingPrompt: 'Teken twee bergen: de voorste donker en scherp, de achterste licht en wazig.',
-            quizSetA: [
-              { q: 'Wat gebeurt er met kleuren in de verte bij atmosferisch perspectief?', options: ['Ze worden blauwer, lichter en waziger', 'Ze worden knallend geel en scherp', 'Ze worden zwart', 'Ze veranderen in vierkanten'], correct: 0 },
-              { q: 'Hoe zien details eruit op de voorgrond?', options: ['Scherp en duidelijk met veel contrast', 'Heel wazig en onzichtbaar', 'Blauw en vaag', 'Met stippellijnen'], correct: 0 },
-              { q: 'Waarom worden bergen in de verte blauw/grijs van kleur?', options: ['Door de laag lucht (atmosfeer) en stofdeeltjes waar je doorheen kijkt', 'Omdat bergen altijd blauw geverfd zijn', 'Door de schaduw van de maan', 'Omdat de schilder geen groen meer had'], correct: 0 },
-              { q: 'Welke Renaissance meester paste dit toe in de achtergrond van de Mona Lisa?', options: ['Leonardo da Vinci', 'Piet Mondriaan', 'Andy Warhol', 'Vincent van Gogh'], correct: 0 },
-              { q: 'Waar bevindt zich het sterkste contrast in een landschap met atmosferisch perspectief?', options: ['Op de voorgrond', 'Op de achterste bergketen', 'In de wolken', 'Nergens'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Atmosferisch perspectief werkt vooral goed bij het schilderen van:', options: ['Weidse landschappen en vergezichten', 'Kleine stillevens op een bord', 'Strakke kubussen', 'Portretten van dichtbij'], correct: 0 },
-              { q: 'De vervaging van vormen in de verte noemde Da Vinci ook wel:', options: ['Sfumato', 'Arcering', 'Contour', 'Symmetrie'], correct: 0 },
-              { q: 'Als je bergen op de achtergrond donkerder en scherper tekent dan op de voorgrond, dan:', options: ['Klopt het atmosferisch perspectief niet meer', 'Krijg je een heel realistisch landschap', 'Is het schilderij af', 'Krijg je 3D-effect'], correct: 0 },
-              { q: 'In de verte nemen de contrasten tussen licht en donker:', options: ['Af (ze worden minder sterk)', 'Toe (ze worden extreem fel)', 'Niet af', 'Verandert niets'], correct: 0 },
-              { q: 'Welke kleurtoon overheerst vaak in de verste bergketens?', options: ['Koele blauwe of grijze tinten', 'Warme rode tinten', 'Felle gele tinten', 'Diepzwarte tinten'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'licht_schaduw',
-        title: 'Licht, Schaduw & Plasticiteit',
-        icon: 'fa-sun',
-        color: 'from-yellow-500 to-amber-600',
-        levels: [
-          {
-            level: 1,
-            title: 'Eigen Schaduw & Slagschaduw',
-            theory: `
-              <p>Licht zorgt ervoor dat we vorm en diepte kunnen zien. Er zijn twee belangrijke soorten schaduw:</p>
-              <ul>
-                <li><strong>Eigen schaduw</strong>: De schaduw op het voorwerp zelf, aan de kant die van de lichtbron afgewend is.</li>
-                <li><strong>Slagschaduw</strong>: De schaduw die het voorwerp werpt op de ondergrond of op een ander vlak.</li>
-              </ul>
-            `,
-            extraTheory: 'Eigen schaduw zit OP het voorwerp zelf. Slagschaduw valt VALT op de tafel of de grond.',
-            artwork: {
-              title: 'De Fruitmand',
-              artist: 'Caravaggio',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Canestra_di_frutta_%28Caravaggio%29.jpg/600px-Canestra_di_frutta_%28Caravaggio%29.jpg',
-              analysis: 'Caravaggio schilderde de subtiele eigen schaduw op de appels én de donkere slagschaduw van de mand op de tafel.'
-            },
-            drawingPrompt: 'Teken een bal met een eigen schaduw aan de rechterkant én een donkere slagschaduw op de grond.',
-            quizSetA: [
-              { q: 'Wat is eigen schaduw?', options: ['De schaduw die op het voorwerp zelf zit', 'De schaduw die het voorwerp op de grond werpt', 'De schaduw van de schilder zelf', 'Een zwarte verflaag'], correct: 0 },
-              { q: 'Wat is slagschaduw?', options: ['De schaduw die een object werpt op de ondergrond of muur', 'De schaduw op de neus van het figuur', 'De glans van een lamp', 'De contourlijn van een vorm'], correct: 0 },
-              { q: 'Aan welke kant van een voorwerp ontstaat de eigen schaduw?', options: ['Aan de kant die van de lichtbron afgewend is', 'Aan de kant waar de zon recht op schijnt', 'Aan de bovenkant', 'In het midden'], correct: 0 },
-              { q: 'Welke Italiaanse barokmeester stond bekend om zijn realistische licht en schaduw op fruit en mensen?', options: ['Caravaggio', 'Mondriaan', 'Van Gogh', 'Matisse'], correct: 0 },
-              { q: 'Wat laat een slagschaduw zien aan de kijker?', options: ['Dat het voorwerp echt op een ondergrond staat of zweeft', 'De temperatuur van de kamer', 'De sterkte van het potlood', 'Het gewicht van de verf'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Waar valt een slagschaduw naartoe?', options: ['Weg van de lichtbron (in de richting van de lichtstralen)', 'Recht naar de zon toe', 'Naar de bovenkant van het papier', 'Altijd naar links'], correct: 0 },
-              { q: 'Als het licht van linksboven komt, waar zit dan de eigen schaduw van een bal?', options: ['Rechtsonder op de bal', 'Llinksboven op de bal', 'Exact in het midden', 'Er is geen schaduw'], correct: 0 },
-              { q: 'Wat gebeurt er als je zowel eigen schaduw als slagschaduw weglaat?', options: ['Het voorwerp lijkt plat en zwevend (2D)', 'Het voorwerp wordt 3D', 'Het voorwerp liocht op', 'Het wordt heel realistisch'], correct: 0 },
-              { q: 'Is een slagschaduw dicht bij het voorwerp scherper of waziger?', options: ['Dicht bij het voorwerp is de slagschaduw scherper en donkerder', 'Dichtbij is het juist heel licht', 'Het is altijd wazig', 'Er is geen verschil'], correct: 0 },
-              { q: 'Licht en schaduw samen zorgen voor:', options: ['Plasticiteit en ruimtelijkheid', 'Een platte tekening', 'Geometrische patronen', 'Felle kleuren'], correct: 0 }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Clairobscur (Licht-Donker Contrast)',
-            theory: `
-              <p><strong>Clairobscur</strong> (of chiaroscuro) is een techniek waarbij het contrast tussen licht en donker heel sterk wordt aangezet.</p>
-              <p>Door een lichte figuur voor een heel donkere achtergrond te plaatsen ontstaat er een theatraal en dramatisch effect. Het hoofdonderwerp lijkt door een denkbeeldige spotlight te worden verlicht.</p>
-            `,
-            extraTheory: 'Clairobscur = Extreem contrast tussen fel licht en diepe duisternis, alsof er een spotlight op het onderwerp staat.',
-            artwork: {
-              title: 'De Malle Babbe',
-              artist: 'Frans Hals',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Frans_Hals_-_Malle_Babbe_-_Google_Art_Project.jpg/600px-Frans_Hals_-_Malle_Babbe_-_Google_Art_Project.jpg',
-              analysis: 'Frans Hals gebruikt hevig licht-donkercontrast om het gezicht uit de donkere achtergrond te laten springen.'
-            },
-            drawingPrompt: 'Kleur de achtergrond van het doek donker in en laat een wit/licht vormpje in het midden eruit springen.',
-            quizSetA: [
-              { q: 'Wat betekent het woord Clairobscur?', options: ['Licht-donker (sterk contrast tussen licht en schaduw)', 'Snel schilderen', 'Kleurrijk', 'Tekenen zonder gum'], correct: 0 },
-              { q: 'Welk effect heeft clairobscur op een schilderij?', options: ['Het zorgt voor een dramatische, theatrale sfeer', 'Het maakt alles plat', 'Het wist alle schaduwen uit', 'Het maakt de afbeelding saai'], correct: 0 },
-              { q: 'Hoe ziet de achtergrond er vaak uit bij een clairobscur portret?', options: ['Zeer donker of bijna zwart', 'Knalgeel', 'Scherp getekend met gebouwen', 'Wit met roze stippen'], correct: 0 },
-              { q: 'Welke Hollandse meester paste dit meesterlijk toe in De Nachtwacht?', options: ['Rembrandt van Rijn', 'Piet Mondriaan', 'Vincent van Gogh', 'Karel Appel'], correct: 0 },
-              { q: 'Lijkt het hoofdonderwerp bij clairobscur verlicht te worden door:', options: ['Een sterke spotlight of felle lichtbron', 'Een zachte nevel', 'Het hele doek tegelijk', 'Maanlicht uit de verte'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Chiaroscuro is de Italiaanse term voor:', options: ['Licht-donker', 'Vorm-restvorm', 'Rood-groen', 'Cirkel-vierkant'], correct: 0 },
-              { q: 'Waarom pasten barokschilders clairobscur toe?', options: ['Om de spanning en emotie in het verhaal te vergroten', 'Omdat donkere verf goedkoper was', 'Om fouten te bedekken', 'Omdat het verplicht was'], correct: 0 },
-              { q: 'Bij clairobscur zijn de overgangen tussen licht en donker vaak:', options: ['Zeer sterk en abrupt', 'Onzichtbaar', 'Alleen blauw van kleur', 'Geometrisch vierkant'], correct: 0 },
-              { q: 'Een figuur die uit de diepe schaduw stapt roept een gevoel op van:', options: ['Mysterie en drama', 'Blijdschap en vrolijkheid', 'Symmetrie', 'Platheid'], correct: 0 },
-              { q: 'Welk element valt als eerste op in een clairobscur werk?', options: ['Het felst verlichte deel', 'De donkerste hoek', 'De handtekening', 'Het kader'], correct: 0 }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Glanslicht & Reflecties',
-            theory: `
-              <p>Om een voorwerp écht tastbaar te maken (zoals glanzend metaal, glas of een natte appel), gebruik je <strong>glanslicht</strong>.</p>
-              <p>Een glanslicht is een hele felle, witte vlek op het punt waar de lichtbron rechtstreeks weerspiegelt. Het geeft het voorwerp zijn **plasticiteit** en textuur.</p>
-            `,
-            extraTheory: 'Glanslicht = Een fel wit stipje/vlekje waar het licht reflecteert. Dit maakt gladdere voorwerpen super realistisch!',
-            artwork: {
-              title: 'Meisje met de Parel',
-              artist: 'Johannes Vermeer',
-              imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Meisje_met_de_parel.jpg/600px-Meisje_met_de_parel.jpg',
-              analysis: 'Vermeer zette slechts een paar felle witte verfstreken neer om de glans van de parel en de vochtige lippen te laten schitteren.'
-            },
-            drawingPrompt: 'Teken een donkere kers of bol en voeg een fel wit stipje glanslicht toe.',
-            quizSetA: [
-              { q: 'Wat is een glanslicht?', options: ['Een felle, witte reflectie op het glanzende punt van een voorwerp', 'De schaduw onder het voorwerp', 'Een gele achtergrond', 'De contourlijn rondom'], correct: 0 },
-              { q: 'Wat suggereer je met een scherp glanslicht op een vorm?', options: ['Een glad of glanzend oppervlak (zoals glas, metaal of een natte appel)', 'Een ruwe matten stof', 'Een zachte wolk', 'Een houten plank'], correct: 0 },
-              { q: 'Welk schilderij van Vermeer heeft een beroemd glanslicht op een siersterk attribuut?', options: ['Meisje met de parel', 'De Aardappeleters', 'Gernica', 'Victory Boogie Woogie'], correct: 0 },
-              { q: 'Wat verstaan we onder het woord "plasticiteit"?', options: ['De gesuggereerde driedimensionale tastbaarheid van een vorm op papier', 'Dat een tekening van plastic gemaakt is', 'Hoe buigzaam het papier is', 'De kleur van de verf'], correct: 0 },
-              { q: 'Welke kleur heeft een zuiver glanslicht meestal op papier?', options: ['Helder wit (onbedekt papier of felle witte verf)', 'Diep zwart', 'Donkerblauw', 'Grijs'], correct: 0 }
-            ],
-            quizSetB: [
-              { q: 'Heeft een mat ruw voorwerp (zoals een vilten hoed) scherpe glanslichten?', options: ['Nee, mat materiaal verspreidt het licht zacht zonder scherp glanslicht', 'Ja, net zoveel als een spiegel', 'Alleen in de zon', 'Ja, altijd'], correct: 0 },
-              { q: 'Een wit stipje in het oog van een getekend portret zorgt voor:', options: ['Een levendige en vochtige blik', 'Een blind oog', 'Een foute tekening', 'Een zwarte pupil'], correct: 0 },
-              { q: 'Hoe noem je de weerkaatsing van licht van de tafel terug naar de onderkant van de bal?', options: ['Reflectielicht', 'Slagschaduw', 'Atmosfeer', 'Glanslijn'], correct: 0 },
-              { q: 'Glanslichten gecombineerd met diepe schaduwen geven maximale:', options: ['Plasticiteit en textuurweergave', 'Symmetrie', 'Kleurmengeling', '2D-platheid'], correct: 0 },
-              { q: 'Vermeer bracht het glanslicht op de parel aan met:', options: ['Een paar snelle, rake spetters/streken witte verf', 'Een liniaal', 'Sponzen', 'Een zwarte stift'], correct: 0 }
-            ]
-          }
-        ]
-      }
-    ];
-
-    let accounts = JSON.parse(localStorage.getItem('ka_accounts')) || [
-      { id: 'acc_default', name: 'Kunstenaar 1', avatar: 'K', progress: {} }
-    ];
-    let currentAccountId = localStorage.getItem('ka_active_account') || 'acc_default';
-    
-    // Application Navigation State
-    let currentSubject = null;
-    let currentLevel = null;
-    let currentTab = 'kennis';
-    let quizPool = 'A'; // 'A' or 'B'
-    let hasDrawnOnCanvas = false;
-
-    // Drawing Canvas State
-    let canvas, ctx;
-    let isDrawing = false;
-    let currentTool = 'brush'; // 'brush' or 'eraser'
-    let currentColor = '#000000';
-    let currentBrushSize = 5;
-
-    window.onload = function() {
-      initCanvas();
-      renderAccounts();
-      renderDashboard();
-    };
-
-    function getCurrentAccount() {
-      let acc = accounts.find(a => a.id === currentAccountId);
-      if (!acc) {
-        acc = accounts[0];
-        currentAccountId = acc.id;
-      }
-      return acc;
-    }
-
-    function saveAccounts() {
-      localStorage.setItem('ka_accounts', JSON.stringify(accounts));
-      localStorage.setItem('ka_active_account', currentAccountId);
-    }
-
-    function renderDashboard() {
-      const user = getCurrentAccount();
-      document.getElementById('header-username').textContent = user.name;
-      document.getElementById('header-avatar').textContent = user.name.charAt(0).toUpperCase();
-
-      document.getElementById('view-dashboard').classList.remove('hidden');
-      document.getElementById('view-level').classList.add('hidden');
-
-      const grid = document.getElementById('subjects-grid');
-      grid.innerHTML = '';
-
-      SUBJECTS_DATA.forEach(sub => {
-        // Calculate level progression
-        const subProgress = user.progress[sub.id] || { maxUnlockedLevel: 1 };
-        const unlockedLevel = subProgress.maxUnlockedLevel || 1;
-
-        const card = document.createElement('div');
-        card.className = "bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-6 group";
-
-        let levelsHTML = '';
-        sub.levels.forEach(lvl => {
-          const isUnlocked = lvl.level <= unlockedLevel;
-          const isCompleted = lvl.level < unlockedLevel || (subProgress[`level_${lvl.level}_passed`]);
-
-          levelsHTML += `
-            <button onclick="selectLevel('${sub.id}', ${lvl.level})" ${!isUnlocked ? 'disabled' : ''} 
-              class="w-full py-2.5 px-3.5 rounded-xl border text-xs sm:text-sm font-bold flex items-center justify-between transition
-              ${isCompleted ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 
-                isUnlocked ? 'bg-brand-50 text-brand-700 border-brand-200 hover:bg-brand-100' : 
-                'bg-slate-50 text-slate-400 border-slate-200 opacity-60 cursor-not-allowed'}">
-              <span class="flex items-center gap-2">
-                <i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-600' : isUnlocked ? 'fa-circle-play text-brand-600' : 'fa-lock text-slate-400'}"></i>
-                Niveau ${lvl.level}: ${lvl.title}
-              </span>
-              <i class="fa-solid fa-chevron-right text-xs opacity-50"></i>
-            </button>
-          `;
-        });
-
-        card.innerHTML = `
-          <div class="space-y-4">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${sub.color} text-white flex items-center justify-center text-xl shadow-md">
-                <i class="fa-solid ${sub.icon}"></i>
-              </div>
-              <div>
-                <h4 class="font-extrabold text-slate-900 text-lg group-hover:text-brand-600 transition">${sub.title}</h4>
-                <p class="text-xs text-slate-500 font-medium">3 Niveaus beschikbaar</p>
-              </div>
-            </div>
-            
-            <div class="space-y-2 pt-2 border-t border-slate-100">
-              ${levelsHTML}
-            </div>
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
-    }
-
-    function showDashboard() {
-      renderDashboard();
-    }
-
-    function selectLevel(subjectId, levelNum) {
-      currentSubject = SUBJECTS_DATA.find(s => s.id === subjectId);
-      currentLevel = currentSubject.levels.find(l => l.level === levelNum);
-      quizPool = 'A'; // Reset to quiz set A
-
-      document.getElementById('level-subject-title').textContent = currentSubject.title;
-      document.getElementById('level-title').textContent = `Niveau ${currentLevel.level}: ${currentLevel.title}`;
-
-      document.getElementById('view-dashboard').classList.add('hidden');
-      document.getElementById('view-level').classList.remove('hidden');
-
-      // Hide extra explanation alert by default
-      document.getElementById('extra-explanation-box').classList.add('hidden');
-
-      // Clear Canvas automatically on new subject or level
-      clearCanvas();
-      hasDrawnOnCanvas = false;
-
-      // Switch to Kennis tab
-      switchTab('kennis');
-    }
-
-    function switchTab(tabName) {
-      currentTab = tabName;
-
-      // Tab Buttons Styling
-      ['kennis', 'tekenen', 'quiz'].forEach(t => {
-        const btn = document.getElementById(`tab-btn-${t}`);
-        const content = document.getElementById(`tab-content-${t}`);
+    <!-- SCHERM 1: LEREN (Volledig hersteld met alle originele onderdelen) -->
+    <div id="screen-leren" class="flex-grow flex flex-col">
         
-        if (t === tabName) {
-          btn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition bg-white text-brand-600 shadow-sm border border-slate-200";
-          content.classList.remove('hidden');
-        } else {
-          btn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800";
-          content.classList.add('hidden');
-        }
-      });
+        <!-- Hero Section -->
+        <section class="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800/80 to-slate-900 py-12 border-b border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
+                            ✨ Ontdek de Kunstenaar in Jezelf
+                        </span>
+                        <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                            Leer Schilderen, Tekenen & Kunstgeschiedenis
+                        </h1>
+                        <p class="mt-4 text-lg text-slate-300 leading-relaxed">
+                            Doorloop onze interactieve lessen, oefen in de digitale tekenstudio en test je kennis. Verdien punten die je direct kunt inzetten in het Kunst Avontuur Spel!
+                        </p>
+                        
+                        <!-- Points Counter Banner -->
+                        <div class="mt-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-2xl">
+                                    ⭐
+                                </div>
+                                <div>
+                                    <div class="text-xs uppercase tracking-wider text-amber-400 font-bold">Jouw Actiepunten Balans</div>
+                                    <div class="text-2xl font-black text-amber-300"><span id="leren-points-display">0</span> Punten</div>
+                                </div>
+                            </div>
+                            <button onclick="switchTab('spel')" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-sm transition-colors shadow-lg shadow-amber-400/20">
+                                Naar Spel ➔
+                            </button>
+                        </div>
+                    </div>
 
-      if (tabName === 'kennis') {
-        renderTheoryTab();
-      } else if (tabName === 'tekenen') {
-        renderDrawingTab();
-      } else if (tabName === 'quiz') {
-        renderQuizTab();
-      }
-    }
-
-    function renderTheoryTab() {
-      document.getElementById('theory-text-container').innerHTML = currentLevel.theory;
-
-      const art = currentLevel.artwork;
-      document.getElementById('artwork-title').textContent = art.title;
-      document.getElementById('artwork-artist').textContent = art.artist;
-      document.getElementById('artwork-analysis').textContent = art.analysis;
-      
-      const imgEl = document.getElementById('artwork-img');
-      imgEl.src = art.imgUrl;
-    }
-
-    function handleImageError(img) {
-      // Fallback SVG graphic if image fails to load
-      img.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23e2e8f0'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' font-weight='bold' fill='%2364748b' text-anchor='middle'>Kunstwerk Afbeelding</text></svg>";
-    }
-
-    function initCanvas() {
-      canvas = document.getElementById('drawing-canvas');
-      ctx = canvas.getContext('2d');
-
-      // Set canvas resolution
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-
-      // Event Listeners for Drawing (Touch & Mouse)
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-      canvas.addEventListener('mouseleave', stopDrawing);
-
-      // Touch handling with scroll prevention
-      canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousedown', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-      }, { passive: false });
-
-      canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        const mouseEvent = new MouseEvent('mousemove', {
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvas.dispatchEvent(mouseEvent);
-      }, { passive: false });
-
-      canvas.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        const mouseEvent = new MouseEvent('mouseup', {});
-        canvas.dispatchEvent(mouseEvent);
-      }, { passive: false });
-    }
-
-    function resizeCanvas() {
-      if (!canvas || !canvas.parentElement) return;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const tempImageData = ctx ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
-      
-      canvas.width = rect.width - 20;
-      canvas.height = Math.max(360, rect.height - 20);
-
-      // Fill white background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      if (tempImageData) {
-        ctx.putImageData(tempImageData, 0, 0);
-      }
-    }
-
-    function renderDrawingTab() {
-      document.getElementById('drawing-prompt-text').textContent = currentLevel.drawingPrompt;
-      setTimeout(resizeCanvas, 50);
-    }
-
-    function startDrawing(e) {
-      isDrawing = true;
-      hasDrawnOnCanvas = true;
-      const rect = canvas.getBoundingClientRect();
-      ctx.beginPath();
-      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      const rect = canvas.getBoundingClientRect();
-      
-      ctx.lineWidth = currentBrushSize;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      if (currentTool === 'eraser') {
-        ctx.strokeStyle = '#ffffff';
-      } else {
-        ctx.strokeStyle = currentColor;
-      }
-
-      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-      ctx.stroke();
-    }
-
-    function stopDrawing() {
-      if (isDrawing) {
-        ctx.closePath();
-        isDrawing = false;
-      }
-    }
-
-    function setTool(tool) {
-      currentTool = tool;
-      const brushBtn = document.getElementById('tool-brush');
-      const eraserBtn = document.getElementById('tool-eraser');
-
-      if (tool === 'brush') {
-        brushBtn.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-brand-600 text-white border-brand-600";
-        eraserBtn.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
-      } else {
-        eraserBtn.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-brand-600 text-white border-brand-600";
-        brushBtn.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-lg border font-bold text-xs transition bg-white text-slate-700 border-slate-200 hover:bg-slate-100";
-      }
-    }
-
-    function setColor(color) {
-      currentColor = color;
-      setTool('brush');
-    }
-
-    function setBrushSize(size) {
-      currentBrushSize = size;
-      document.getElementById('brush-size-val').textContent = `${size}px`;
-    }
-
-    function clearCanvas() {
-      if (!ctx || !canvas) return;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      hasDrawnOnCanvas = false;
-    }
-
-    function submitDrawing() {
-      if (!hasDrawnOnCanvas) {
-        alert("Maak eerst een tekening op het doek voordat je de opdracht inlevert!");
-        return;
-      }
-      switchTab('quiz');
-    }
-
-    function renderQuizTab() {
-      const questions = quizPool === 'A' ? currentLevel.quizSetA : currentLevel.quizSetB;
-      document.getElementById('quiz-pool-badge').textContent = `Vragenset ${quizPool}`;
-
-      const container = document.getElementById('quiz-questions-container');
-      container.innerHTML = '';
-
-      // Reset feedback box and submit button
-      document.getElementById('quiz-result-box').classList.add('hidden');
-      document.getElementById('btn-submit-quiz').classList.remove('hidden');
-
-      questions.forEach((qObj, qIdx) => {
-        const qCard = document.createElement('div');
-        qCard.className = "bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3";
-
-        let optionsHTML = '';
-        qObj.options.forEach((opt, optIdx) => {
-          optionsHTML += `
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 cursor-pointer transition text-xs sm:text-sm text-slate-800 font-medium">
-              <input type="radio" name="q_${qIdx}" value="${optIdx}" class="accent-brand-600 w-4 h-4">
-              <span>${opt}</span>
-            </label>
-          `;
-        });
-
-        qCard.innerHTML = `
-          <h4 class="font-bold text-slate-900 text-sm sm:text-base flex items-start gap-2">
-            <span class="w-6 h-6 rounded-full bg-brand-100 text-brand-700 text-xs flex items-center justify-center shrink-0 font-extrabold mt-0.5">${qIdx + 1}</span>
-            ${qObj.q}
-          </h4>
-          <div class="space-y-2 pt-1">
-            ${optionsHTML}
-          </div>
-        `;
-
-        container.appendChild(qCard);
-      });
-    }
-
-    function checkQuiz() {
-      const questions = quizPool === 'A' ? currentLevel.quizSetA : currentLevel.quizSetB;
-      let correctCount = 0;
-
-      for (let i = 0; i < questions.length; i++) {
-        const selected = document.querySelector(`input[name="q_${i}"]:checked`);
-        if (!selected) {
-          alert(`Beantwoord vraag ${i + 1} voordat je de quiz inlevert!`);
-          return;
-        }
-        if (parseInt(selected.value) === questions[i].correct) {
-          correctCount++;
-        }
-      }
-
-      // Show Results
-      const resultBox = document.getElementById('quiz-result-box');
-      resultBox.classList.remove('hidden');
-      document.getElementById('btn-submit-quiz').classList.add('hidden');
-
-      const isPassed = correctCount >= 4; // Requirement: 4 or 5 correct
-
-      if (isPassed) {
-        resultBox.className = "p-6 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-900 flex flex-col gap-4";
-        resultBox.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xl shrink-0">
-              <i class="fa-solid fa-trophy"></i>
+                    <!-- Statistics Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-emerald-400">12+</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Interactieve Cursussen</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-teal-400">0.5 - 1.0</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Punten Per Oefening</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-cyan-400">100%</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Praktische Studio</div>
+                        </div>
+                        <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                            <div class="text-3xl font-extrabold text-amber-400">Officieel</div>
+                            <div class="text-sm font-medium text-slate-400 mt-1">Certificaat Behalen</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-              <h4 class="font-black text-lg text-emerald-950">Gefeliciteerd! Je bent geslaagd!</h4>
-              <p class="text-sm text-emerald-800">Je had <strong>${correctCount} van de 5</strong> vragen goed! Dit niveau is succesvol behaald.</p>
+        </section>
+
+        <!-- Cursus & Leermodules Sectie -->
+        <section class="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">Beschikbare Leermodules</h2>
+                    <p class="text-slate-400 mt-1">Kies een onderdeel om theorie te lezen, een tekenopdracht in te leveren of de quiz te maken.</p>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="flex flex-wrap gap-2" id="category-filters">
+                    <button onclick="filterCategory('all')" class="cat-filter active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 text-white transition-all">Alles</button>
+                    <button onclick="filterCategory('schilderen')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Schilderen</button>
+                    <button onclick="filterCategory('tekenen')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Tekenen</button>
+                    <button onclick="filterCategory('historie')" class="cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Kunsthistorie</button>
+                </div>
             </div>
-          </div>
-          <div class="flex justify-end pt-2 border-t border-emerald-200">
-            <button onclick="unlockAndProceed()" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm transition">
-              Terug naar Overzicht <i class="fa-solid fa-arrow-right"></i>
-            </button>
-          </div>
-        `;
 
-        // Save progress to account
-        saveLevelProgress(currentSubject.id, currentLevel.level);
-
-      } else {
-        resultBox.className = "p-6 rounded-xl border bg-rose-50 border-rose-200 text-rose-900 flex flex-col gap-4";
-        resultBox.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center text-xl shrink-0">
-              <i class="fa-solid fa-xmark"></i>
+            <!-- Cards Container -->
+            <div id="courses-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic courses inserted here via JS -->
             </div>
-            <div>
-              <h4 class="font-black text-lg text-rose-950">Nog niet voldoende (${correctCount}/5 goed)</h4>
-              <p class="text-sm text-rose-800">Je hebt minimaal 4 goede antwoorden nodig. Bekijk de extra uitleg bij Theorie en doe daarna de herhalingstest!</p>
+        </section>
+
+        <!-- Interactive Workspace Modal/Container -->
+        <div id="workspace-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+                
+                <!-- Workspace Header -->
+                <div class="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
+                    <div>
+                        <span id="workspace-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Module</span>
+                        <h3 id="workspace-title" class="text-2xl font-bold text-white mt-1">Titel Les</h3>
+                    </div>
+                    <button onclick="closeWorkspace()" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xl transition-colors">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Navigation Sub-Tabs -->
+                <div class="flex border-b border-slate-800 bg-slate-950/40 px-6 pt-2 gap-4">
+                    <button onclick="switchWorkspaceSubTab('theorie')" id="subtab-theorie" class="py-3 px-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400 transition-colors">
+                        📖 Theorie (+0.5 pt)
+                    </button>
+                    <button onclick="switchWorkspaceSubTab('tekenen')" id="subtab-tekenen" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+                        🖌️ Tekenstudio (+0.5 pt)
+                    </button>
+                    <button onclick="switchWorkspaceSubTab('quiz')" id="subtab-quiz" class="py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors">
+                        ❓ Quiz (+1.0 pt per vraag)
+                    </button>
+                </div>
+
+                <!-- Workspace Body -->
+                <div class="p-6 overflow-y-auto flex-grow space-y-6">
+                    
+                    <!-- 1. Theorie Content -->
+                    <div id="ws-content-theorie" class="space-y-4 text-slate-300 leading-relaxed">
+                        <div id="theorie-text" class="prose prose-invert max-w-none">
+                            <!-- Ingested dynamically -->
+                        </div>
+                        <div class="pt-6 border-t border-slate-800 flex justify-between items-center">
+                            <span id="theorie-status-msg" class="text-xs text-slate-400">Lees de theorie aandachtig door.</span>
+                            <button id="btn-complete-theorie" onclick="completeTheorie()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                Markeer als Gelezen (+0.5 pt)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Tekenstudio Content -->
+                    <div id="ws-content-tekenen" class="hidden space-y-4">
+                        <p id="teken-instructions" class="text-slate-300 text-sm bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                            Opdracht instructies komen hier...
+                        </p>
+
+                        <!-- Canvas Controls -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400">Kleur:</span>
+                                <button onclick="setCanvasColor('#000000')" class="w-7 h-7 rounded-full bg-black border border-slate-600 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#ef4444')" class="w-7 h-7 rounded-full bg-red-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#3b82f6')" class="w-7 h-7 rounded-full bg-blue-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#eab308')" class="w-7 h-7 rounded-full bg-yellow-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <button onclick="setCanvasColor('#22c55e')" class="w-7 h-7 rounded-full bg-green-500 ring-2 ring-transparent focus:ring-emerald-400"></button>
+                                <input type="color" id="colorPicker" value="#000000" class="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0">
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400">Dikte:</span>
+                                <button onclick="setBrushSize(2)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Fijn</button>
+                                <button onclick="setBrushSize(6)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Middel</button>
+                                <button onclick="setBrushSize(14)" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Dik</button>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button onclick="clearCanvas()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-red-400 font-semibold border border-red-500/20">
+                                    🗑️ Wis
+                                </button>
+                                <button onclick="downloadCanvas()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold">
+                                    💾 Opslaan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Box -->
+                        <div class="w-full bg-white rounded-2xl overflow-hidden border-2 border-slate-700 flex justify-center">
+                            <canvas id="studioCanvas" width="700" height="400" class="w-full max-w-full touch-none cursor-crosshair bg-white"></canvas>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                            <span id="tekenen-status-msg" class="text-xs text-slate-400">Maak je tekening en lever hem in voor punten.</span>
+                            <button id="btn-complete-tekenen" onclick="completeTekenen()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                Tekening Inleveren (+0.5 pt)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Quiz Content -->
+                    <div id="ws-content-quiz" class="hidden space-y-6">
+                        <div id="quiz-questions-list" class="space-y-6">
+                            <!-- Dynamic questions with shuffled options -->
+                        </div>
+
+                        <!-- Detailed Feedback View -->
+                        <div id="quiz-feedback-box" class="hidden p-5 rounded-2xl border space-y-3">
+                            <div id="quiz-feedback-title" class="font-bold text-lg"></div>
+                            <div id="quiz-feedback-body" class="text-sm"></div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Scoor minimaal 4/5 vragen goed om de module af te ronden!</span>
+                            <div class="flex gap-3">
+                                <button id="btn-check-quiz" onclick="checkQuiz()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20">
+                                    Quiz Nakijken
+                                </button>
+                                <button id="btn-retry-quiz" onclick="retryQuiz()" class="hidden px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-sm transition-all shadow-lg shadow-amber-500/20">
+                                    Opnieuw Proberen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-          </div>
-          <div class="flex justify-end gap-3 pt-2 border-t border-rose-200">
-            <button onclick="retryLevelWithExtraTheory()" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm transition flex items-center gap-2">
-              <i class="fa-solid fa-lightbulb"></i> Bekijk Extra Uitleg & Nieuwe Quiz
-            </button>
-          </div>
-        `;
-      }
-    }
+        </div>
 
-    function retryLevelWithExtraTheory() {
-      // Switch quiz pool to B
-      quizPool = quizPool === 'A' ? 'B' : 'A';
+        <!-- Kunst Galerie -->
+        <section class="py-12 bg-slate-900/60 border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Inspirerende Kunstgalerie</h2>
+                <p class="text-slate-400 mb-8">Bekijk bekende meesterwerken en ontdek hun stijl en stroming.</p>
 
-      // Set extra theory text in theory tab
-      const extraBox = document.getElementById('extra-explanation-box');
-      extraBox.classList.remove('hidden');
-      document.getElementById('extra-explanation-text').textContent = currentLevel.extraTheory;
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-amber-700 via-orange-600 to-yellow-500 flex items-center justify-center text-5xl">
+                            🌻
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-amber-400 uppercase">Post-Impressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">Zonnebloemen</h3>
+                            <p class="text-slate-400 text-xs mt-1">Vincent van Gogh (1889)</p>
+                        </div>
+                    </div>
 
-      // Switch to theory tab
-      switchTab('kennis');
-    }
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-blue-900 via-indigo-800 to-slate-700 flex items-center justify-center text-5xl">
+                            🌌
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-blue-400 uppercase">Expressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">De Sterrennacht</h3>
+                            <p class="text-slate-400 text-xs mt-1">Vincent van Gogh (1889)</p>
+                        </div>
+                    </div>
 
-    function saveLevelProgress(subjectId, levelNum) {
-      const user = getCurrentAccount();
-      if (!user.progress[subjectId]) {
-        user.progress[subjectId] = { maxUnlockedLevel: 1 };
-      }
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-teal-800 via-emerald-700 to-cyan-600 flex items-center justify-center text-5xl">
+                            🌊
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-cyan-400 uppercase">Impressionisme</span>
+                            <h3 class="font-bold text-white text-lg mt-1">Waterlelies</h3>
+                            <p class="text-slate-400 text-xs mt-1">Claude Monet (1919)</p>
+                        </div>
+                    </div>
 
-      user.progress[subjectId][`level_${levelNum}_passed`] = true;
-      if (levelNum >= user.progress[subjectId].maxUnlockedLevel && levelNum < 3) {
-        user.progress[subjectId].maxUnlockedLevel = levelNum + 1;
-      }
+                    <div class="bg-slate-800/80 rounded-2xl overflow-hidden border border-slate-700/60 group hover:border-emerald-500/50 transition-all">
+                        <div class="h-48 bg-gradient-to-tr from-slate-800 via-slate-700 to-amber-900 flex items-center justify-center text-5xl">
+                            🖼️
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-amber-400 uppercase">Barok</span>
+                            <h3 class="font-bold text-white text-lg mt-1">De Nachtwacht</h3>
+                            <p class="text-slate-400 text-xs mt-1">Rembrandt van Rijn (1642)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-      saveAccounts();
-    }
+        <!-- Certificaat Generator -->
+        <section class="py-12 border-t border-slate-800 bg-slate-900">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl font-bold text-white">Officieel Kunstacademie Certificaat</h2>
+                <p class="text-slate-400 mt-2">Vul je naam in om jouw persoonlijke certificaat van deelname te genereren!</p>
 
-    function unlockAndProceed() {
-      showDashboard();
-    }
+                <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                    <input type="text" id="cert-name-input" placeholder="Vul je volledige naam in..." class="flex-grow px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    <button onclick="generateCertificate()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                        Genereer 📜
+                    </button>
+                </div>
 
-    function toggleAccountModal() {
-      const modal = document.getElementById('account-modal');
-      modal.classList.toggle('hidden');
-    }
+                <!-- Certificate Display Box -->
+                <div id="certificate-box" class="hidden mt-8 p-8 bg-gradient-to-b from-amber-50 to-amber-100 text-slate-900 rounded-3xl border-8 border-amber-300 shadow-2xl relative max-w-2xl mx-auto">
+                    <div class="border-2 border-amber-700/30 p-8 rounded-2xl">
+                        <div class="text-3xl font-serif text-amber-900 font-bold mb-2">CERTIFICAAT VAN DEELNAME</div>
+                        <div class="text-xs uppercase tracking-widest text-amber-700 font-semibold mb-6">De Digitale Kunstacademie</div>
+                        
+                        <p class="text-sm text-slate-700">Dit certificaat wordt met trots uitgereikt aan:</p>
+                        <div id="cert-display-name" class="text-3xl font-bold text-emerald-800 font-serif my-4">Naam Kunstenaar</div>
+                        <p class="text-sm text-slate-700 max-w-md mx-auto">
+                            Voor het succesvol afronden van de interactieve kunsteducatie modules en het behalen van de praktijkoefeningen.
+                        </p>
 
-    function renderAccounts() {
-      const list = document.getElementById('account-list');
-      list.innerHTML = '';
+                        <div class="mt-8 pt-6 border-t border-amber-800/20 flex justify-between items-center text-xs text-amber-900 font-semibold">
+                            <div>Datum: <span id="cert-date">--/--/----</span></div>
+                            <div class="text-emerald-700 font-bold">✓ Officieel Geverifieerd</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-      accounts.forEach(acc => {
-        const isActive = acc.id === currentAccountId;
-        const btn = document.createElement('div');
-        btn.className = `p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${isActive ? 'bg-brand-50 border-brand-300' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`;
+        <!-- Contactformulier -->
+        <section class="py-12 border-t border-slate-800 bg-slate-950">
+            <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-2xl font-bold text-white text-center">Vragen of Feedback?</h2>
+                <p class="text-slate-400 text-sm text-center mt-1 mb-6">Neem contact op met onze docenten van de Kunstacademie.</p>
+
+                <form onsubmit="handleContactSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Naam</label>
+                        <input type="text" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">E-mailadres</label>
+                        <input type="email" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Bericht</label>
+                        <textarea rows="3" required class="w-full px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-emerald-500"></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl border border-slate-700 transition-colors">
+                        Verstuur Bericht
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- SCHERM 2: SPEL (Nieuwe Bos-Arena met HP-balkjes boven het hoofd) -->
+    <div id="screen-spel" class="hidden flex-grow flex flex-col">
         
-        btn.innerHTML = `
-          <div class="flex items-center gap-3" onclick="switchAccount('${acc.id}')">
-            <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs">
-              ${acc.name.charAt(0).toUpperCase()}
+        <!-- Game Header Bar -->
+        <div class="bg-slate-950 border-b border-slate-800 py-3 px-4 sm:px-8 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                    Level <span id="game-level-num">1</span>
+                </span>
+                <span class="text-sm font-semibold text-slate-300 hidden sm:inline">
+                    Bos Arena - Versla de Zombies!
+                </span>
             </div>
-            <span class="font-bold text-sm text-slate-800">${acc.name}</span>
-          </div>
-          ${isActive ? '<span class="text-xs text-brand-600 font-extrabold"><i class="fa-solid fa-check"></i> Actief</span>' : ''}
-        `;
 
-        list.appendChild(btn);
-      });
-    }
+            <!-- Action Points Display -->
+            <div class="flex items-center space-x-3 bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 rounded-2xl">
+                <span class="text-amber-400 text-lg">⭐</span>
+                <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-amber-400 block leading-tight">Actiepunten</span>
+                    <span id="game-points-display" class="text-xl font-black text-amber-300 leading-none">0</span>
+                </div>
+            </div>
+        </div>
 
-    function switchAccount(accId) {
-      currentAccountId = accId;
-      saveAccounts();
-      renderAccounts();
-      toggleAccountModal();
-      renderDashboard();
-    }
+        <!-- Bos Arena Main Stage -->
+        <div class="forest-arena flex-grow flex flex-col justify-between p-4 sm:p-8 min-h-[500px]">
+            <div class="forest-trees absolute inset-0 pointer-events-none"></div>
 
-    function createAccount() {
-      const input = document.getElementById('new-account-name');
-      const name = input.value.trim();
-      if (!name) return;
+            <!-- Overlays: Game Over & Level Complete -->
+            <div id="game-over-overlay" class="hidden absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-20 h-20 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-4xl mb-4 animate-bounce">
+                    💀
+                </div>
+                <h2 class="text-4xl font-extrabold text-red-500">GAME OVER</h2>
+                <p class="text-slate-300 max-w-md mt-2 text-sm">
+                    De zombies hebben je overrompeld! Je bent teruggezet naar Level 1. Je opgebouwde actiepunten blijven gewoon behouden.
+                </p>
+                <button onclick="restartGame()" class="mt-6 px-8 py-3.5 bg-red-600 hover:bg-red-500 text-white font-extrabold rounded-2xl shadow-xl shadow-red-600/30 transition-transform hover:scale-105">
+                    🔄 Opnieuw Proberen
+                </button>
+            </div>
 
-      const newAcc = {
-        id: 'acc_' + Date.now(),
-        name: name,
-        avatar: name.charAt(0).toUpperCase(),
-        progress: {}
-      };
+            <div id="level-complete-overlay" class="hidden absolute inset-0 z-30 bg-emerald-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-4xl mb-4 animate-bounce">
+                    🏆
+                </div>
+                <h2 class="text-4xl font-extrabold text-emerald-400">LEVEL VOLTOOID!</h2>
+                <p class="text-slate-300 max-w-md mt-2 text-sm">
+                    Geweldig gedaan! Je hebt alle zombies in deze bos-zone uitgeschakeld. Je maximale HP stijgt voor het volgende level!
+                </p>
+                <button onclick="nextLevel()" class="mt-6 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-2xl shadow-xl shadow-emerald-500/30 transition-transform hover:scale-105">
+                    ➔ Naar Volgende Zone
+                </button>
+            </div>
 
-      accounts.push(newAcc);
-      currentAccountId = newAcc.id;
-      saveAccounts();
+            <!-- Arena Characters Stage (Left: Artist, Right: Zombies) -->
+            <div class="relative z-10 max-w-5xl mx-auto w-full grid grid-cols-2 gap-4 sm:gap-12 items-end my-auto py-8">
+                
+                <!-- LEFT SIDE: JIJ (De Kunstenaar) met HP balk Boven de Kop -->
+                <div id="player-stage-card" class="flex flex-col items-center">
+                    
+                    <!-- HP Balk Recht BOVEN het Hoofd van de Kunstenaar -->
+                    <div class="w-36 sm:w-48 bg-slate-900/90 p-2 rounded-2xl border border-slate-700/80 shadow-2xl mb-3 backdrop-blur-sm">
+                        <div class="flex justify-between text-xs font-bold text-slate-200 mb-1">
+                            <span>🧑‍🎨 Jij</span>
+                            <span id="player-hp-text">100/100</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-3.5 rounded-full overflow-hidden border border-slate-800">
+                            <div id="player-hp-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 100%;"></div>
+                        </div>
+                        <div id="player-status-badge" class="mt-1 h-4 flex justify-center items-center">
+                            <!-- Shield badge dynamically inserted -->
+                        </div>
+                    </div>
 
-      input.value = '';
-      renderAccounts();
-      toggleAccountModal();
-      renderDashboard();
-    }
-  </script>
+                    <!-- Character Avatar Sprite -->
+                    <div id="player-avatar" class="relative group">
+                        <div class="w-28 h-28 sm:w-36 sm:h-36 bg-gradient-to-b from-blue-500/20 to-teal-500/40 rounded-3xl border-2 border-blue-400/50 flex items-center justify-center text-6xl sm:text-7xl shadow-2xl backdrop-blur-sm transition-transform duration-200">
+                            🧑‍🎨
+                        </div>
+                        <!-- Canvas pallet accessory -->
+                        <div class="absolute -bottom-2 -right-2 bg-amber-400 text-slate-950 p-2 rounded-full text-xl shadow-lg">
+                            🎨
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT SIDE: ZOMBIE(S) met HP balk Boven de Kop -->
+                <div id="zombies-stage-container" class="flex flex-wrap justify-center gap-4 items-end">
+                    <!-- Zombies dynamically rendered with HP bar on top of each -->
+                </div>
+
+            </div>
+
+            <!-- Combat Controls HUD & Log -->
+            <div class="relative z-10 max-w-4xl mx-auto w-full bg-slate-900/90 backdrop-blur-md rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-2xl space-y-4">
+                
+                <!-- Turn Indicator & Action Buttons Header -->
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <span id="turn-status-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        Jouw Beurt!
+                    </span>
+                    <span class="text-xs text-slate-400">
+                        Kies een actie met je punten
+                    </span>
+                </div>
+
+                <!-- 4 Action Buttons Grid (Punt 2 & 4) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button id="btn-act-weak" onclick="playerAction('weak')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">🗡️ Zwak</div>
+                            <div class="text-[11px] text-slate-400">Kleine schade</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">1 pt</span>
+                    </button>
+
+                    <button id="btn-act-shield" onclick="playerAction('shield')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">🛡️ Schild</div>
+                            <div class="text-[11px] text-slate-400">Blokkeer aanval</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">2 pt</span>
+                    </button>
+
+                    <button id="btn-act-strong" onclick="playerAction('strong')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">💥 Sterk</div>
+                            <div class="text-[11px] text-slate-400">Grote schade</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">3 pt</span>
+                    </button>
+
+                    <button id="btn-act-heal" onclick="playerAction('heal')" class="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 border border-slate-700 text-left transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="text-base font-bold text-white">💖 Heal</div>
+                            <div class="text-[11px] text-slate-400">+30 HP Herstel</div>
+                        </div>
+                        <span class="mt-2 text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 w-fit">5 pt</span>
+                    </button>
+                </div>
+
+                <!-- Combat Log Box -->
+                <div class="h-24 overflow-y-auto custom-scrollbar bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono space-y-1" id="combat-log-container">
+                    <!-- Logs inserted dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // --- CURSUS & LEERMODULES DATA ---
+        const coursesData = [
+            {
+                id: 'mod1',
+                category: 'schilderen',
+                title: 'Niveau 1: Kleurenleer & Mengtechnieken',
+                description: 'Ontdek hoe je met primaire kleuren de mooiste secundaire tinten mengt.',
+                levelBadge: 'Schilderen • Basis',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">De Wereld van Primaire Kleuren</h3>
+                    <p>In de schilderkunst werken we met drie basiskleuren die we niet zelf kunnen maken door te mengen: <strong>Rood</strong>, <strong>Geel</strong> en <strong>Blauw</strong>.</p>
+                    <p class="mt-2">Door deze kleuren in gelijke verhoudingen te combineren ontstaan de <em>secundaire kleuren</em>:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                        <li>Rood + Geel = <strong>Oranje</strong></li>
+                        <li>Geel + Blauw = <strong>Groen</strong></li>
+                        <li>Blauw + Rood = <strong>Paars</strong></li>
+                    </ul>
+                `,
+                opdracht: 'Gebruik de kleurkiezer in de studio en maak een mooie regenboog of een meng-compositie met minimaal 3 kleuren.',
+                quiz: [
+                    { q: "Wat zijn de drie primaire kleuren?", options: ["Groen, Oranje, Paars", "Rood, Geel, Blauw", "Zwart, Wit, Grijs", "Rood, Blauw, Groen"], answer: "Rood, Geel, Blauw", exp: "Rood, geel en blauw zijn de zuivere basiskleuren." },
+                    { q: "Welke secundaire kleur krijg je door Blauw en Geel te mengen?", options: ["Paars", "Oranje", "Groen", "Bruin"], answer: "Groen", exp: "Geel gemengd met blauw geeft de kleur groen." },
+                    { q: "Kun je primaire kleuren maken door andere kleuren te mengen?", options: ["Nee, het zijn basiskleuren", "Ja, met wit erbij", "Alleen in waterverf", "Ja, door alles te mengen"], answer: "Nee, het zijn basiskleuren", exp: "Primaire kleuren zijn niet te maken uit mengsels." },
+                    { q: "Wat voor kleur is Oranje?", options: ["Tertiair", "Primair", "Secundair", "Neutraal"], answer: "Secundair", exp: "Oranje is een secundaire kleur gemaakt van rood en geel." },
+                    { q: "Wat gebeurt er als je alle drie de primaire kleuren door elkaar mengt?", options: ["Helder Wit", "Een donkerbruine/grijze tint", "Lichtblauw", "Neon geel"], answer: "Een donkerbruine/grijze tint", exp: "Het mengen van alle primaire kleuren absorbeert al het licht." }
+                ]
+            },
+            {
+                id: 'mod2',
+                category: 'tekenen',
+                title: 'Niveau 2: Vormen & Ruimtelijk Perspectief',
+                description: 'Leer hoe je diepte maakt op een plat vlak met verdwijnpunten.',
+                levelBadge: 'Tekenen • Gemiddeld',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">Eenpuntsperspectief</h3>
+                    <p>Om een plat papier 3D te laten lijken gebruiken we een <strong>horizonlijn</strong> met een <strong>verdwijnpunt</strong>.</p>
+                    <p class="mt-2">Alle lijnen die de diepte in lopen (zoals de zijkanten van een weg of gebouw) komen samen in dat ene punt. Objecten die dichtbij staan teken je groot, en ver weg worden ze kleiner.</p>
+                `,
+                opdracht: 'Teken een horizonlijn met een verdwijnpunt in het midden en teken een spoorlijn of weg die smal naar achteren loopt.',
+                quiz: [
+                    { q: "Wat is een verdwijnpunt in perspectief?", options: ["Een foute lijn", "Het punt waar wijkende lijnen samenkomen", "De rand van het papier", "Het middelpunt van een cirkel"], answer: "Het punt waar wijkende lijnen samenkomen", exp: "In dit punt lijken alle parallelle dieptelijnen samen te komen." },
+                    { q: "Hoe teken je objecten die verder weg staan?", options: ["Groter", "Kleiner", "Precies even groot", "Onzichtbaar"], answer: "Kleiner", exp: "Door perspectief lijken objecten kleiner naarmate ze verder weg zijn." },
+                    { q: "Waar bevindt de horizonlijn zich meestal?", options: ["Op de grond", "Op ooghoogte van de kijker", "Bovenaan het papier", "Willekeurig"], answer: "Op ooghoogte van de kijker", exp: "De horizon staat gelijk aan de ooghoogte." },
+                    { q: "Hoeveel verdwijnpunten heeft eenpuntsperspectief?", options: ["Één", "Twee", "Drie", "Geen"], answer: "Één", exp: "De naam zegt het al: één verdwijnpunt op de horizon." },
+                    { q: "Welke vorm creëert de meeste stabiliteit in een compositie?", options: ["Cirkel", "Vierkant", "Spiraal", "Golvende lijn"], answer: "Vierkant", exp: "Vierkanten en rechthoeken geven rust en stevigheid." }
+                ]
+            },
+            {
+                id: 'mod3',
+                category: 'historie',
+                title: 'Niveau 3: Kunststromingen door de Eeuwen',
+                description: 'Van de klassieke Renaissance tot het moderne Impressionisme.',
+                levelBadge: 'Historie • Gevorderd',
+                theorie: `
+                    <h3 class="text-xl font-bold text-emerald-400 mb-2">Impressionisme & Lichtval</h3>
+                    <p>Het Impressionisme ontstond in het Frankrijk van de 19e eeuw. Kunstenaars zoals Claude Monet wilden niet meer een exacte foto maken, maar de <strong>impressie van het moment</strong> en het veranderende zonlicht vastleggen.</p>
+                    <p class="mt-2">Ze werkten met snelle, zichtbare penseelstreken en schilderden graag buiten in de natuur (en plein air).</p>
+                `,
+                opdracht: 'Maak een impressionistisch landschapje met snelle, losse stippen en strepen in heldere kleuren.',
+                quiz: [
+                    { q: "Wat probeerden de Impressionisten vooral te vangen?", options: ["Fotografische details", "De impressie van licht en moment", "Abstracte geometrie", "Bijbelse verhalen"], answer: "De impressie van licht en moment", exp: "Ze focusten op veranderend licht en de sfeer van het moment." },
+                    { q: "Wie is een van de beroemdste Impressionistische schilders?", options: ["Claude Monet", "Rembrandt", "Picasso", "Mondriaan"], answer: "Claude Monet", exp: "Monet staat bekend om zijn Waterlelies en Impression, Sunrise." },
+                    { q: "Waar schilderden Impressionisten bij voorkeur?", options: ["In een donker atelier", "Buiten in de natuur (en plein air)", "In de kerk", "Vanuit hun hoofd"], answer: "Buiten in de natuur (en plein air)", exp: "Buiten konden ze direct het natuurlijke licht observeren." },
+                    { q: "Hoe zien de penseelstreken er vaak uit bij Impressionisme?", options: ["Onzichtbaar en glad", "Snel, los en zichtbaar", "Strakke liniaal-lijnen", "Gekraste potloodlijnen"], answer: "Snel, los en zichtbaar", exp: "Losse strepen zorgen voor dynamiek en trillend licht." },
+                    { q: "In welk land ontstond het Impressionisme?", options: ["Nederland", "Frankrijk", "Italië", "Duitsland"], answer: "Frankrijk", exp: "Het ontstond rond 1870 in Parijs, Frankrijk." }
+                ]
+            }
+        ];
+
+        // --- APP STATE PERSISTENCE ---
+        const DEFAULT_STATE = {
+            points: 0,
+            completedTasks: {}, // { 'mod1_theorie': true, 'mod1_tekenen': true, 'mod1_quiz': true }
+            
+            // Game State
+            gameLevel: 1,
+            playerHp: 100,
+            playerMaxHp: 100,
+            playerShield: false,
+            zombies: [],
+            selectedZombieId: null,
+            isPlayerTurn: true,
+            combatLog: []
+        };
+
+        let appState = JSON.parse(localStorage.getItem('kunstacademie_state_v2')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+        function saveState() {
+            localStorage.setItem('kunstacademie_state_v2', JSON.stringify(appState));
+            updateUI();
+        }
+
+        function addPoints(amount) {
+            appState.points += amount;
+            saveState();
+            showToast(`+${amount} Punten verdiend! ⭐`);
+        }
+
+        function spendPoints(amount) {
+            if (appState.points >= amount) {
+                appState.points -= amount;
+                saveState();
+                return true;
+            }
+            return false;
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-emerald-500 text-slate-950 px-4 py-2.5 rounded-xl font-extrabold text-sm shadow-xl flex items-center gap-2 transition-all transform translate-y-2';
+            toast.innerHTML = `<span>✨</span><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // --- NAVIGATION BETWEEN SCHERMEN ---
+        function switchTab(tab) {
+            const screenLeren = document.getElementById('screen-leren');
+            const screenSpel = document.getElementById('screen-spel');
+            const btnLeren = document.getElementById('tab-btn-leren');
+            const btnSpel = document.getElementById('tab-btn-spel');
+
+            if (tab === 'leren') {
+                screenLeren.classList.remove('hidden');
+                screenSpel.classList.add('hidden');
+                btnLeren.classList.add('active');
+                btnSpel.classList.remove('active');
+            } else {
+                screenLeren.classList.add('hidden');
+                screenSpel.classList.remove('hidden');
+                btnLeren.classList.remove('active');
+                btnSpel.classList.add('active');
+
+                initGameIfNeeded();
+            }
+            updateUI();
+        }
+
+        // --- LEREN SECTION LOGIC ---
+        let currentModule = null;
+        let activeCategory = 'all';
+        let currentShuffledQuiz = [];
+
+        function renderCourses() {
+            const grid = document.getElementById('courses-grid');
+            grid.innerHTML = '';
+
+            const filtered = coursesData.filter(c => activeCategory === 'all' || c.category === activeCategory);
+
+            filtered.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800/80 border border-slate-700/60 rounded-3xl p-6 flex flex-col justify-between hover:border-emerald-500/50 transition-all group';
+
+                const thDone = appState.completedTasks[`${course.id}_theorie`];
+                const tkDone = appState.completedTasks[`${course.id}_tekenen`];
+                const qzDone = appState.completedTasks[`${course.id}_quiz`];
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                                ${course.levelBadge}
+                            </span>
+                            <div class="flex gap-1 text-xs">
+                                ${thDone ? '📖' : ''} ${tkDone ? '🖌️' : ''} ${qzDone ? '🏆' : ''}
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-emerald-300 transition-colors">${course.title}</h3>
+                        <p class="text-slate-400 text-sm mt-2 leading-relaxed">${course.description}</p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-700/50 flex items-center justify-between">
+                        <span class="text-xs text-amber-400 font-bold">Tot 6.0 Pt te verdienen</span>
+                        <button onclick="openWorkspace('${course.id}')" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg shadow-emerald-500/20">
+                            Start Module ➔
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-filter').forEach(btn => {
+                btn.className = 'cat-filter px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all';
+            });
+            event.target.className = 'cat-filter active px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 text-white transition-all';
+            renderCourses();
+        }
+
+        function openWorkspace(modId) {
+            currentModule = coursesData.find(m => m.id === modId);
+            document.getElementById('workspace-modal').classList.remove('hidden');
+            document.getElementById('workspace-title').textContent = currentModule.title;
+            document.getElementById('theorie-text').innerHTML = currentModule.theorie;
+            document.getElementById('teken-instructions').textContent = currentModule.opdracht;
+
+            switchWorkspaceSubTab('theorie');
+            checkTaskButtonsStatus();
+            setupQuiz();
+        }
+
+        function closeWorkspace() {
+            document.getElementById('workspace-modal').classList.add('hidden');
+            currentModule = null;
+        }
+
+        function switchWorkspaceSubTab(tab) {
+            document.getElementById('ws-content-theorie').classList.add('hidden');
+            document.getElementById('ws-content-tekenen').classList.add('hidden');
+            document.getElementById('ws-content-quiz').classList.add('hidden');
+
+            document.getElementById('subtab-theorie').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('subtab-tekenen').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+            document.getElementById('subtab-quiz').className = 'py-3 px-4 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200';
+
+            document.getElementById(`ws-content-${tab}`).classList.remove('hidden');
+            const activeSub = document.getElementById(`subtab-${tab}`);
+            activeSub.className = 'py-3 px-4 text-sm font-bold border-b-2 border-emerald-500 text-emerald-400';
+
+            if (tab === 'tekenen') {
+                setTimeout(resizeStudioCanvas, 50);
+            }
+        }
+
+        function checkTaskButtonsStatus() {
+            const thDone = appState.completedTasks[`${currentModule.id}_theorie`];
+            const btnTh = document.getElementById('btn-complete-theorie');
+            if (thDone) {
+                btnTh.textContent = '✓ Gelezen (Punten Ontvangen)';
+                btnTh.disabled = true;
+                btnTh.className = 'px-5 py-2.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed';
+            } else {
+                btnTh.textContent = 'Markeer als Gelezen (+0.5 pt)';
+                btnTh.disabled = false;
+                btnTh.className = 'px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20';
+            }
+
+            const tkDone = appState.completedTasks[`${currentModule.id}_tekenen`];
+            const btnTk = document.getElementById('btn-complete-tekenen');
+            if (tkDone) {
+                btnTk.textContent = '✓ Ingeleverd (Punten Ontvangen)';
+                btnTk.disabled = true;
+                btnTk.className = 'px-5 py-2.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed';
+            } else {
+                btnTk.textContent = 'Tekening Inleveren (+0.5 pt)';
+                btnTk.disabled = false;
+                btnTk.className = 'px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-500/20';
+            }
+        }
+
+        function completeTheorie() {
+            const key = `${currentModule.id}_theorie`;
+            if (!appState.completedTasks[key]) {
+                appState.completedTasks[key] = true;
+                addPoints(0.5);
+                checkTaskButtonsStatus();
+            }
+        }
+
+        function completeTekenen() {
+            const key = `${currentModule.id}_tekenen`;
+            if (!appState.completedTasks[key]) {
+                appState.completedTasks[key] = true;
+                addPoints(0.5);
+                checkTaskButtonsStatus();
+            }
+        }
+
+        // --- TEKENSTUDIO LOGICA ---
+        const studioCanvas = document.getElementById('studioCanvas');
+        const studioCtx = studioCanvas.getContext('2d');
+        let isDrawing = false;
+        let brushColor = '#000000';
+        let brushSize = 6;
+
+        function resizeStudioCanvas() {
+            const parent = studioCanvas.parentElement;
+            studioCanvas.width = parent.clientWidth;
+            studioCtx.fillStyle = '#ffffff';
+            studioCtx.fillRect(0, 0, studioCanvas.width, studioCanvas.height);
+        }
+
+        function setCanvasColor(color) {
+            brushColor = color;
+            document.getElementById('colorPicker').value = color;
+        }
+
+        document.getElementById('colorPicker').addEventListener('input', (e) => brushColor = e.target.value);
+
+        function setBrushSize(size) { brushSize = size; }
+
+        function clearCanvas() {
+            studioCtx.fillStyle = '#ffffff';
+            studioCtx.fillRect(0, 0, studioCanvas.width, studioCanvas.height);
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'mijn-kunstwerk.png';
+            link.href = studioCanvas.toDataURL();
+            link.click();
+        }
+
+        function getCanvasCoords(e) {
+            const rect = studioCanvas.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        studioCanvas.addEventListener('mousedown', (e) => { isDrawing = true; drawStroke(e); });
+        studioCanvas.addEventListener('mousemove', (e) => { if(isDrawing) drawStroke(e); });
+        studioCanvas.addEventListener('mouseup', () => { isDrawing = false; studioCtx.beginPath(); });
+        studioCanvas.addEventListener('touchstart', (e) => { isDrawing = true; drawStroke(e); }, {passive: false});
+        studioCanvas.addEventListener('touchmove', (e) => { if(isDrawing) drawStroke(e); }, {passive: false});
+        studioCanvas.addEventListener('touchend', () => { isDrawing = false; studioCtx.beginPath(); });
+
+        function drawStroke(e) {
+            e.preventDefault();
+            const pos = getCanvasCoords(e);
+            studioCtx.lineWidth = brushSize;
+            studioCtx.lineCap = 'round';
+            studioCtx.strokeStyle = brushColor;
+            studioCtx.lineTo(pos.x, pos.y);
+            studioCtx.stroke();
+            studioCtx.beginPath();
+            studioCtx.moveTo(pos.x, pos.y);
+        }
+
+        // --- QUIZ LOGICA (Willekeurige Volgorde & Feedback) ---
+        function shuffleArray(arr) {
+            const array = [...arr];
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function setupQuiz() {
+            const container = document.getElementById('quiz-questions-list');
+            container.innerHTML = '';
+            document.getElementById('quiz-feedback-box').classList.add('hidden');
+            document.getElementById('btn-check-quiz').classList.remove('hidden');
+            document.getElementById('btn-retry-quiz').classList.add('hidden');
+
+            const isDone = appState.completedTasks[`${currentModule.id}_quiz`];
+            if (isDone) {
+                container.innerHTML = `<div class="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-400 text-center font-bold">
+                    🏆 Je hebt deze quiz al afgerond en alle punten behaald!
+                </div>`;
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+                return;
+            }
+
+            // Shuffle questions and options
+            currentShuffledQuiz = shuffleArray(currentModule.quiz).map(q => ({
+                ...q,
+                shuffledOptions: shuffleArray(q.options)
+            }));
+
+            currentShuffledQuiz.forEach((qItem, qIdx) => {
+                const qCard = document.createElement('div');
+                qCard.className = 'p-5 bg-slate-950/60 rounded-2xl border border-slate-800 space-y-3';
+                
+                let html = `<div class="font-bold text-white text-base">${qIdx + 1}. ${qItem.q}</div><div class="space-y-2">`;
+                
+                qItem.shuffledOptions.forEach((optText, optIdx) => {
+                    html += `
+                        <label class="opt-label block p-3 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 cursor-pointer transition-all flex items-center gap-3" id="q${qIdx}-opt${optIdx}-label">
+                            <input type="radio" name="q${qIdx}" value="${optText.replace(/"/g, '&quot;')}" class="accent-emerald-500">
+                            <span class="text-sm text-slate-300 font-medium">${optText}</span>
+                        </label>
+                    `;
+                });
+                html += `</div><div id="q${qIdx}-exp" class="hidden text-xs mt-2 p-2 rounded-lg bg-slate-900 text-slate-400 border border-slate-800"></div>`;
+                qCard.innerHTML = html;
+                container.appendChild(qCard);
+            });
+        }
+
+        function checkQuiz() {
+            let correctCount = 0;
+            let total = currentShuffledQuiz.length;
+
+            currentShuffledQuiz.forEach((qItem, qIdx) => {
+                const selected = document.querySelector(`input[name="q${qIdx}"]:checked`);
+                const expDiv = document.getElementById(`q${qIdx}-exp`);
+                expDiv.classList.remove('hidden');
+                expDiv.textContent = `💡 Uitleg: ${qItem.exp}`;
+
+                qItem.shuffledOptions.forEach((optText, optIdx) => {
+                    const label = document.getElementById(`q${qIdx}-opt${optIdx}-label`);
+                    if (optText === qItem.answer) {
+                        label.className = 'opt-label block p-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/10 text-emerald-300 font-bold';
+                    } else if (selected && selected.value === optText) {
+                        label.className = 'opt-label block p-3 rounded-xl border-2 border-red-500 bg-red-500/10 text-red-300 font-bold';
+                    }
+                });
+
+                if (selected && selected.value === qItem.answer) {
+                    correctCount++;
+                }
+            });
+
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const feedbackTitle = document.getElementById('quiz-feedback-title');
+            const feedbackBody = document.getElementById('quiz-feedback-body');
+            feedbackBox.classList.remove('hidden');
+
+            if (correctCount >= 4) {
+                // Slagen!
+                feedbackBox.className = 'p-5 rounded-2xl border bg-emerald-500/10 border-emerald-500/30 text-emerald-300 space-y-2';
+                feedbackTitle.textContent = `🎉 Geweldig! Je hebt ${correctCount}/${total} vragen goed geschat!`;
+                feedbackBody.textContent = `Je hebt ${correctCount} punten verdiend! Je kunt deze direct gebruiken in het spel.`;
+                
+                addPoints(correctCount);
+                appState.completedTasks[`${currentModule.id}_quiz`] = true;
+                saveState();
+
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+            } else {
+                // Gefaald: mag opnieuw proberen
+                feedbackBox.className = 'p-5 rounded-2xl border bg-red-500/10 border-red-500/30 text-red-300 space-y-2';
+                feedbackTitle.textContent = `❌ Je scoorde ${correctCount}/${total}. Probeer het opnieuw!`;
+                feedbackBody.textContent = `Je hebt minstens 4 van de 5 vragen goed nodig om te slagen en punten te verdienen. Probeer het opnieuw!`;
+
+                document.getElementById('btn-check-quiz').classList.add('hidden');
+                document.getElementById('btn-retry-quiz').classList.remove('hidden');
+            }
+        }
+
+        function retryQuiz() {
+            setupQuiz();
+        }
+
+        function generateCertificate() {
+            const name = document.getElementById('cert-name-input').value.trim();
+            if (!name) {
+                alert("Vul a.u.b. eerst je naam in!");
+                return;
+            }
+            document.getElementById('cert-display-name').textContent = name;
+            document.getElementById('cert-date').textContent = new Date().toLocaleDateString('nl-NL');
+            document.getElementById('certificate-box').classList.remove('hidden');
+        }
+
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            alert("Bedankt voor je bericht! Een van onze docenten neemt zo snel mogelijk contact met je op.");
+            e.target.reset();
+        }
+
+        // ==========================================
+        //  DEEL 2: SPEL ENGINE (Bos-Arena met HP op hoofd)
+        // ==========================================
+
+        const ZOMBIE_PROFILES = [
+            { name: "Verf-Knoeier", hp: 30, dmg: 6, emoji: "🧟" },
+            { name: "Gum-Monster", hp: 45, dmg: 9, emoji: "🧟‍♂️" },
+            { name: "Klei-Griezel", hp: 65, dmg: 14, emoji: "🧌" }
+        ];
+
+        function initGameIfNeeded() {
+            restoreCombatLog();
+            if (appState.zombies.length === 0 && appState.playerHp > 0) {
+                spawnLevel(appState.gameLevel);
+            } else {
+                renderGameStage();
+            }
+        }
+
+        function spawnLevel(lvlNum) {
+            appState.gameLevel = lvlNum;
+            appState.zombies = [];
+            appState.isPlayerTurn = true;
+            appState.playerShield = false;
+
+            const count = Math.min(1 + Math.floor(lvlNum / 2), 3);
+            for (let i = 0; i < count; i++) {
+                const profile = ZOMBIE_PROFILES[Math.min(i, ZOMBIE_PROFILES.length - 1)];
+                const hpScale = 1 + (lvlNum * 0.2);
+                const dmgScale = 1 + (lvlNum * 0.15);
+
+                appState.zombies.push({
+                    id: Date.now() + i,
+                    name: profile.name,
+                    hp: Math.floor(profile.hp * hpScale),
+                    maxHp: Math.floor(profile.hp * hpScale),
+                    attack: Math.floor(profile.dmg * dmgScale),
+                    emoji: profile.emoji
+                });
+            }
+
+            if (appState.zombies.length > 0) {
+                appState.selectedZombieId = appState.zombies[0].id;
+            }
+
+            logCombat(`--- BOS ZONE LEVEL ${lvlNum} ---`, 'system');
+            saveState();
+            renderGameStage();
+        }
+
+        function renderGameStage() {
+            // Render Player HP Bar Above Player
+            const hpPct = Math.max(0, (appState.playerHp / appState.playerMaxHp) * 100);
+            const playerHpBar = document.getElementById('player-hp-bar');
+            playerHpBar.style.width = `${hpPct}%`;
+            document.getElementById('player-hp-text').textContent = `${Math.ceil(appState.playerHp)}/${appState.playerMaxHp}`;
+
+            if (hpPct > 50) playerHpBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+            else if (hpPct > 20) playerHpBar.className = 'h-full bg-amber-500 transition-all duration-300';
+            else playerHpBar.className = 'h-full bg-red-600 animate-pulse transition-all duration-300';
+
+            const statusBadge = document.getElementById('player-status-badge');
+            const playerAvatar = document.getElementById('player-avatar');
+            if (appState.playerShield) {
+                statusBadge.innerHTML = `<span class="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-400/40 px-2 py-0.5 rounded-full font-bold">🛡️ Schild Actief</span>`;
+                playerAvatar.firstElementChild.classList.add('shield-glow');
+            } else {
+                statusBadge.innerHTML = '';
+                playerAvatar.firstElementChild.classList.remove('shield-glow');
+            }
+
+            // Render Zombies with HP bar Directly Above Head
+            const zombiesContainer = document.getElementById('zombies-stage-container');
+            zombiesContainer.innerHTML = '';
+
+            appState.zombies.forEach(z => {
+                const zHpPct = Math.max(0, (z.hp / z.maxHp) * 100);
+                const isSelected = z.id === appState.selectedZombieId;
+
+                const zCard = document.createElement('div');
+                zCard.className = `flex flex-col items-center cursor-pointer transition-transform hover:scale-105 ${isSelected ? 'scale-105' : ''}`;
+                zCard.onclick = () => {
+                    if (appState.isPlayerTurn) {
+                        appState.selectedZombieId = z.id;
+                        saveState();
+                        renderGameStage();
+                    }
+                };
+
+                zCard.innerHTML = `
+                    <!-- HP Balk BOVEN het Hoofd van de Zombie -->
+                    <div class="w-32 sm:w-40 bg-slate-900/90 p-1.5 rounded-2xl border ${isSelected ? 'border-red-500 ring-2 ring-red-500/50' : 'border-slate-700/80'} shadow-xl mb-2 backdrop-blur-sm">
+                        <div class="flex justify-between text-[11px] font-bold text-slate-200 mb-0.5">
+                            <span class="truncate max-w-[80px]">${z.name}</span>
+                            <span>${z.hp}/${z.maxHp}</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-2.5 rounded-full overflow-hidden border border-slate-800">
+                            <div class="h-full bg-red-500 transition-all duration-300" style="width: ${zHpPct}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Zombie Avatar Sprite -->
+                    <div class="relative">
+                        <div class="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-b from-red-950/40 to-slate-900/80 rounded-3xl border-2 ${isSelected ? 'border-red-500' : 'border-slate-700'} flex items-center justify-center text-5xl sm:text-6xl shadow-2xl backdrop-blur-sm">
+                            ${z.emoji}
+                        </div>
+                        ${isSelected ? '<div class="absolute -top-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">Doelwit</div>' : ''}
+                    </div>
+                `;
+                zombiesContainer.appendChild(zCard);
+            });
+
+            // Action Buttons Availability (Punt 4)
+            const isTurn = appState.isPlayerTurn;
+            const pts = appState.points;
+            const hasZombie = appState.zombies.length > 0;
+
+            document.getElementById('btn-act-weak').disabled = !isTurn || pts < 1 || !hasZombie;
+            document.getElementById('btn-act-shield').disabled = !isTurn || pts < 2 || !hasZombie || appState.playerShield;
+            document.getElementById('btn-act-strong').disabled = !isTurn || pts < 3 || !hasZombie;
+            document.getElementById('btn-act-heal').disabled = !isTurn || pts < 5 || !hasZombie || appState.playerHp >= appState.playerMaxHp;
+
+            const turnBadge = document.getElementById('turn-status-badge');
+            if (isTurn) {
+                turnBadge.textContent = "Jouw Beurt!";
+                turnBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 animate-pulse";
+            } else {
+                turnBadge.textContent = "Zombies vallen aan...";
+                turnBadge.className = "text-xs font-bold px-3 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30";
+            }
+        }
+
+        function playerAction(actType) {
+            if (!appState.isPlayerTurn) return;
+
+            const targetIdx = appState.zombies.findIndex(z => z.id === appState.selectedZombieId);
+            const target = targetIdx !== -1 ? appState.zombies[targetIdx] : appState.zombies[0];
+
+            let success = false;
+
+            if (actType === 'weak') {
+                if (spendPoints(1)) {
+                    const dmg = 12 + (appState.gameLevel * 3);
+                    target.hp -= dmg;
+                    logCombat(`🗡️ Zwakke aanval op ${target.name} voor ${dmg} schade.`, 'player-dmg');
+                    success = true;
+                }
+            } else if (actType === 'strong') {
+                if (spendPoints(3)) {
+                    const dmg = 28 + (appState.gameLevel * 5);
+                    target.hp -= dmg;
+                    logCombat(`💥 STERKE AANVAL op ${target.name} voor ${dmg} schade!`, 'player-dmg');
+                    success = true;
+                }
+            } else if (actType === 'shield') {
+                if (spendPoints(2)) {
+                    appState.playerShield = true;
+                    logCombat(`🛡️ Schild geactiveerd! Volgende zombie-aanval wordt geblokkeerd.`, 'system');
+                    success = true;
+                }
+            } else if (actType === 'heal') {
+                if (spendPoints(5)) {
+                    const heal = 30;
+                    appState.playerHp = Math.min(appState.playerMaxHp, appState.playerHp + heal);
+                    logCombat(`💖 Jouw kunstenaar herstelt +${heal} HP!`, 'player-heal');
+                    success = true;
+                }
+            }
+
+            if (success) {
+                appState.isPlayerTurn = false;
+
+                if (target && target.hp <= 0) {
+                    logCombat(`💀 ${target.name} is verslagen!`, 'system');
+                    appState.zombies = appState.zombies.filter(z => z.hp > 0);
+                    appState.selectedZombieId = appState.zombies.length > 0 ? appState.zombies[0].id : null;
+                }
+
+                saveState();
+                renderGameStage();
+
+                if (appState.zombies.length === 0) {
+                    setTimeout(() => {
+                        document.getElementById('level-complete-overlay').classList.remove('hidden');
+                    }, 400);
+                } else {
+                    setTimeout(zombiesTurn, 800);
+                }
+            }
+        }
+
+        function zombiesTurn() {
+            if (appState.zombies.length === 0 || appState.playerHp <= 0) return;
+
+            let totalDmg = 0;
+            appState.zombies.forEach(z => totalDmg += z.attack);
+
+            if (appState.playerShield) {
+                logCombat(`🛡️ Zombies vallen aan voor ${totalDmg} schade, maar je SCHILD BLOKKEERT ALLES!`, 'system');
+                appState.playerShield = false;
+            } else {
+                appState.playerHp -= totalDmg;
+                logCombat(`🧟 Zombies vallen aan en doen ${totalDmg} schade!`, 'enemy-dmg');
+                document.getElementById('player-stage-card').classList.add('animate-hit');
+                setTimeout(() => document.getElementById('player-stage-card').classList.remove('animate-hit'), 400);
+            }
+
+            appState.isPlayerTurn = true;
+            saveState();
+            renderGameStage();
+
+            if (appState.playerHp <= 0) {
+                appState.playerHp = 0;
+                renderGameStage();
+                setTimeout(() => {
+                    document.getElementById('game-over-overlay').classList.remove('hidden');
+                }, 400);
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('level-complete-overlay').classList.add('hidden');
+            appState.playerMaxHp += 15;
+            appState.playerHp = appState.playerMaxHp;
+            spawnLevel(appState.gameLevel + 1);
+        }
+
+        function restartGame() {
+            document.getElementById('game-over-overlay').classList.add('hidden');
+            appState.playerMaxHp = 100;
+            appState.playerHp = 100;
+            appState.combatLog = [];
+            spawnLevel(1);
+        }
+
+        function logCombat(msg, type) {
+            appState.combatLog.unshift({ msg, type });
+            if (appState.combatLog.length > 20) appState.combatLog.pop();
+            saveState();
+            restoreCombatLog();
+        }
+
+        function restoreCombatLog() {
+            const container = document.getElementById('combat-log-container');
+            container.innerHTML = '';
+            appState.combatLog.forEach(item => {
+                const el = document.createElement('div');
+                let color = 'text-slate-300';
+                if (item.type === 'player-dmg') color = 'text-blue-400';
+                if (item.type === 'player-heal') color = 'text-emerald-400 font-bold';
+                if (item.type === 'enemy-dmg') color = 'text-red-400 font-bold';
+                if (item.type === 'system') color = 'text-amber-300';
+
+                el.className = color;
+                el.textContent = item.msg;
+                container.appendChild(el);
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('leren-points-display').textContent = appState.points;
+            document.getElementById('nav-points-badge').textContent = `${appState.points} pt`;
+            document.getElementById('game-points-display').textContent = appState.points;
+            document.getElementById('game-level-num').textContent = appState.gameLevel;
+
+            renderCourses();
+            renderGameStage();
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = () => {
+            updateUI();
+        };
+
+    </script>
 </body>
 </html>
